@@ -27,7 +27,7 @@ DxDevice::DxDevice(const mini::Window & window)
 	m_swapChain.reset(sc);
 	m_context.reset(dc);
 
-	if (FAILED(hr)) 
+	if (FAILED(hr))
 		THROW_WINAPI;
 }
 
@@ -37,8 +37,8 @@ mini::dx_ptr<ID3D11RenderTargetView> DxDevice::CreateRenderTargetView(
 	ID3D11RenderTargetView* temp = nullptr;
 	auto hr = m_device->CreateRenderTargetView(texture.get(), nullptr, &temp);
 	mini::dx_ptr<ID3D11RenderTargetView> result{ temp };
-	
-	if (FAILED(hr)) 
+
+	if (FAILED(hr))
 		THROW_WINAPI;
 
 	return result;}
@@ -55,6 +55,7 @@ vector<BYTE> DxDevice::LoadByteCode(const wstring& filename)
 	if (!sIn.read(reinterpret_cast<char*>(byteCode.data()), byteCodeLength))
 		THROW(L"Error reading" + filename);
 	sIn.close();
+
 	return byteCode;
 }
 
@@ -66,6 +67,7 @@ dx_ptr<ID3D11Texture2D> DxDevice::CreateTexture(
 	dx_ptr<ID3D11Texture2D> result(temp);
 	if (FAILED(hr))
 		THROW_WINAPI;
+
 	return result;
 }
 
@@ -77,6 +79,7 @@ dx_ptr<ID3D11DepthStencilView> DxDevice::CreateDepthStencilView(
 	dx_ptr<ID3D11DepthStencilView> result(temp);
 	if (FAILED(hr))
 		THROW_WINAPI;
+
 	return result;
 }
 
@@ -92,6 +95,7 @@ dx_ptr<ID3D11Buffer> DxDevice::CreateBuffer(const void* data,
 	dx_ptr<ID3D11Buffer> result(temp);
 	if (FAILED(hr))
 		THROW_WINAPI;
+	
 	return result;
 }
 
@@ -104,6 +108,7 @@ dx_ptr<ID3D11VertexShader> DxDevice::CreateVertexShader(
 	dx_ptr<ID3D11VertexShader> result(temp);
 	if (FAILED(hr))
 		THROW_WINAPI;
+	
 	return result;
 }
 
@@ -116,6 +121,7 @@ dx_ptr<ID3D11PixelShader> DxDevice::CreatePixelShader(
 	dx_ptr<ID3D11PixelShader> result(temp);
 	if (FAILED(hr))
 		THROW_WINAPI;
+	
 	return result;
 }
 
@@ -123,10 +129,20 @@ dx_ptr<ID3D11InputLayout> DxDevice::CreateInputLayout(
 	const vector<D3D11_INPUT_ELEMENT_DESC> elements, vector<BYTE> vsCode) const
 {
 	ID3D11InputLayout* temp;
-	auto hr = m_device->CreateInputLayout(elements.data(), elements.size(), 
+	auto hr = m_device->CreateInputLayout(elements.data(), elements.size(),
 		reinterpret_cast<const void*>(vsCode.data()), vsCode.size(), &temp);
 	dx_ptr<ID3D11InputLayout> result(temp);
 	if (FAILED(hr))
 		THROW_WINAPI;
+	
 	return result;
 }
+
+mini::dx_ptr<ID3D11DepthStencilView> DxDevice::CreateDepthStencilView(
+	SIZE size) const
+{
+	auto desc = Texture2DDescription::DepthStencilDescription(
+		size.cx, size.cy);
+	dx_ptr<ID3D11Texture2D> texture = CreateTexture(desc);
+
+	return CreateDepthStencilView(texture);}

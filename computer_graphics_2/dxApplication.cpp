@@ -11,6 +11,14 @@ DxApplication::DxApplication(HINSTANCE hInstance)
 		reinterpret_cast<void**>(&temp));
 	const dx_ptr<ID3D11Texture2D> backTexture{ temp };
 	m_backBuffer = m_device.CreateRenderTargetView(backTexture);
+
+	SIZE wndSize = m_window.getClientSize();
+	m_depthBuffer = m_device.CreateDepthStencilView(wndSize);
+	auto backBuffer = m_backBuffer.get();
+	m_device.context()->OMSetRenderTargets(1,
+		&backBuffer, m_depthBuffer.get());
+	Viewport viewport{ wndSize };
+	m_device.context()->RSSetViewports(1, &viewport);
 }
 
 int DxApplication::MainLoop()

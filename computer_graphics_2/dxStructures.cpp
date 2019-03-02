@@ -45,6 +45,15 @@ Texture2DDescription::Texture2DDescription(UINT width, UINT height)
 	//MiscFlags = 0;
 }
 
+Texture2DDescription Texture2DDescription::DepthStencilDescription(UINT width, UINT height)
+{
+	Texture2DDescription desc(width, height);
+	desc.MipLevels = 1;
+	desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+	return desc;}
+
 BufferDescription::BufferDescription(UINT bindFlags, size_t byteWidth)
 {
 	ZeroMemory(this, sizeof(BufferDescription));
