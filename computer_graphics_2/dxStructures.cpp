@@ -19,4 +19,39 @@ SwapChainDescription::SwapChainDescription(HWND wndHwnd, SIZE wndSize)
 	Windowed = true;
 	// SwapEffect = DXGI_SWAP_EFFECT_DISCARD /*0*/;
 	// Flags = 0;
-}// komentarze - wartości domyśle są 0 i nie wymagają zmiany
+}Viewport::Viewport(SIZE size)
+{
+	this->TopLeftX = 0.0f;
+	this->TopLeftY = 0.0f;
+	this->Width = static_cast<FLOAT>(size.cx);
+	this->Height = static_cast<FLOAT>(size.cy);
+	this->MinDepth = 0.0f;
+	this->MaxDepth = 1.0f;
+}
+
+Texture2DDescription::Texture2DDescription(UINT width, UINT height)
+{
+	ZeroMemory(this, sizeof(Texture2DDescription));
+	Width = width;
+	Height = height;
+	//MipLevels = 0;
+	ArraySize = 1;
+	Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	SampleDesc.Count = 1;
+	SampleDesc.Quality = 0;
+	Usage = D3D11_USAGE_DEFAULT;
+	BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	//CPUAccessFlags = 0;
+	//MiscFlags = 0;
+}
+
+BufferDescription::BufferDescription(UINT bindFlags, size_t byteWidth)
+{
+	ZeroMemory(this, sizeof(BufferDescription));
+	BindFlags = bindFlags;
+	ByteWidth = byteWidth;
+	Usage = D3D11_USAGE_DEFAULT;
+	//CPUAccessFlags = 0;
+	//MiscFlags = 0;
+	//StructureByteStride = 0;
+}
