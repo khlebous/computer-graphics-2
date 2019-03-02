@@ -30,6 +30,9 @@
     <ClInclude Include="dxStructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dxDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="exceptions.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dxStructures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dxDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
