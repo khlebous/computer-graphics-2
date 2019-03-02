@@ -36,6 +36,9 @@
     <ClInclude Include="dxApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vertexPositionColor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="exceptions.cpp">
@@ -63,5 +66,8 @@
   <ItemGroup>
     <FxCompile Include="vs.hlsl" />
     <FxCompile Include="ps.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="structs.hlsli" />
   </ItemGroup>
 </Project>
