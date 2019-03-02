@@ -1,11 +1,16 @@
 #pragma once
 #include "windowApplication.h"
 #include "dxDevice.h"
+#include <vector>
+#include <DirectXMath.h>
+
+using namespace DirectX;
 
 class DxApplication : public mini::WindowApplication
 {
 public:
 	explicit DxApplication(HINSTANCE hInstance);
+	std::vector<XMFLOAT2> CreateTriangleVertices();
 
 protected:
 	int MainLoop() override;
@@ -21,4 +26,4 @@ private:
 	mini::dx_ptr<ID3D11VertexShader> m_vertexShader;
 	mini::dx_ptr<ID3D11PixelShader> m_pixelShader;
 	mini::dx_ptr<ID3D11InputLayout> m_layout;
-};
+};

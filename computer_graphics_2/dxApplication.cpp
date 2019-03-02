@@ -1,5 +1,6 @@
 #include "dxApplication.h"
 using namespace mini;
+using namespace std;
 
 DxApplication::DxApplication(HINSTANCE hInstance)
 	: WindowApplication(hInstance), m_device(m_window)
@@ -19,6 +20,36 @@ DxApplication::DxApplication(HINSTANCE hInstance)
 		&backBuffer, m_depthBuffer.get());
 	Viewport viewport{ wndSize };
 	m_device.context()->RSSetViewports(1, &viewport);
+
+	const auto vsBytes = DxDevice::LoadByteCode(L"vs.cso");
+	const auto psBytes = DxDevice::LoadByteCode(L"ps.cso");
+	m_vertexShader = m_device.CreateVertexShader(vsBytes);
+	m_pixelShader = m_device.CreatePixelShader(psBytes);
+	const auto vertices = CreateTriangleVertices();
+	m_vertexBuffer = m_device.CreateVertexBuffer(vertices);
+	vector<D3D11_INPUT_ELEMENT_DESC> elements
+	{
+		{
+			"POSITION",
+			0,
+			DXGI_FORMAT_R32G32_FLOAT,
+			0,
+			0,
+			D3D11_INPUT_PER_VERTEX_DATA,
+			0
+		}
+	};
+	m_layout = m_device.CreateInputLayout(elements, vsBytes);
+}
+
+std::vector<XMFLOAT2> DxApplication::CreateTriangleVertices()
+{
+	auto v = std::vector<XMFLOAT2>();
+	v.push_back(XMFLOAT2(-0.5, -0.5));
+	v.push_back(XMFLOAT2(-0.5, 0.5));
+	v.push_back(XMFLOAT2(0.5, -0.5));
+
+	return v;
 }
 
 int DxApplication::MainLoop()
@@ -47,4 +78,17 @@ void DxApplication::Update() { }
 void DxApplication::Render()
 {
 	const float clearColor[] = { 0.5f, 0.5f, 1.0f, 1.0f };
-	m_device.context()->ClearRenderTargetView(m_backBuffer.get(), clearColor);}
+	m_device.context()->ClearRenderTargetView(m_backBuffer.get(), clearColor);
+	m_device.context()->ClearDepthStencilView(m_depthBuffer.get(),
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_device.context()->VSSetShader(m_vertexShader.get(), nullptr, 0);
+	m_device.context()->PSSetShader(m_pixelShader.get(), nullptr, 0);
+	m_device.context()->IASetInputLayout(m_layout.get());
+	m_device.context()->IASetPrimitiveTopology(
+		D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	ID3D11Buffer* vbs[] = { m_vertexBuffer.get() };
+	UINT strides[] = { sizeof(XMFLOAT2) };
+	UINT offsets[] = { 0 };
+	m_device.context()->IASetVertexBuffers(0, 1, vbs, strides, offsets);
+	m_device.context()->Draw(3, 0);
+}

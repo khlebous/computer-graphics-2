@@ -19,7 +19,9 @@ SwapChainDescription::SwapChainDescription(HWND wndHwnd, SIZE wndSize)
 	Windowed = true;
 	// SwapEffect = DXGI_SWAP_EFFECT_DISCARD /*0*/;
 	// Flags = 0;
-}Viewport::Viewport(SIZE size)
+}
+
+Viewport::Viewport(SIZE size)
 {
 	this->TopLeftX = 0.0f;
 	this->TopLeftY = 0.0f;
@@ -52,7 +54,8 @@ Texture2DDescription Texture2DDescription::DepthStencilDescription(UINT width, U
 	desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
-	return desc;}
+	return desc;
+}
 
 BufferDescription::BufferDescription(UINT bindFlags, size_t byteWidth)
 {
@@ -63,4 +66,4 @@ BufferDescription::BufferDescription(UINT bindFlags, size_t byteWidth)
 	//CPUAccessFlags = 0;
 	//MiscFlags = 0;
 	//StructureByteStride = 0;
-}
+}
