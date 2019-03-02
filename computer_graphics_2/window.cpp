@@ -34,14 +34,15 @@ bool Window::IsWindowClassRegistered(HINSTANCE hInstance)
 	return c.lpfnWndProc != static_cast<WNDPROC>(Window::WndProc);
 }
 
-Window::Window(HINSTANCE hInstance, int width, int height, IWindowMessageHandler * h)
+Window::Window(HINSTANCE hInstance, int width, int height,
+	IWindowMessageHandler * h)
 	: m_hInstance(hInstance), m_messageHandler(h)
 {
 	CreateWindowHandle(width, height, m_windowClassName);
 }
 
-Window::Window(HINSTANCE hInstance, int width, int height, const wstring& title,
-			   IWindowMessageHandler * h)
+Window::Window(HINSTANCE hInstance, int width, int height,
+	const wstring& title, IWindowMessageHandler * h)
 	: m_hInstance(hInstance), m_messageHandler(h)
 {
 	CreateWindowHandle(width, height, title);
@@ -51,12 +52,13 @@ void Window::CreateWindowHandle(int width, int height, const wstring& title)
 {
 	if (!IsWindowClassRegistered(m_hInstance))
 		RegisterWindowClass(m_hInstance);
-	RECT rect = { 0, 0, width, height};
+	RECT rect = { 0, 0, width, height };
 	DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 	if (!AdjustWindowRect(&rect, style, FALSE))
 		THROW_WINAPI;
-	m_hWnd = CreateWindowW(m_windowClassName.c_str(), title.c_str(), style, CW_USEDEFAULT, CW_USEDEFAULT,
-		rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, m_hInstance, this);
+	m_hWnd = CreateWindowW(m_windowClassName.c_str(), title.c_str(), style, 
+		CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, 
+		rect.bottom - rect.top, NULL, NULL, m_hInstance, this);
 	if (!m_hWnd)
 		THROW_WINAPI;
 }
@@ -76,7 +78,7 @@ LRESULT Window::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(EXIT_SUCCESS);
 		break;
 	default:
-		WindowMessage m = {msg, wParam, lParam, 0};
+		WindowMessage m = { msg, wParam, lParam, 0 };
 		if (m_messageHandler && m_messageHandler->ProcessMessage(m))
 		{
 			return m.result;
@@ -111,7 +113,8 @@ SIZE Window::getClientSize() const
 	return s;
 }
 
-LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, 
+	LPARAM lParam)
 {
 	Window* wnd;
 	if (msg == WM_CREATE)
@@ -123,37 +126,42 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	}
 	else
 	{
-		wnd = reinterpret_cast<Window*>(static_cast<LONG_PTR>(GetWindowLongPtrW(hWnd, GWLP_USERDATA)));
+		wnd = reinterpret_cast<Window*>(static_cast<LONG_PTR>
+			(GetWindowLongPtrW(hWnd, GWLP_USERDATA)));
 	}
 
-	//Windows likes to eat exceptions that leak through callbacks on some platforms.
+	//Windows likes to eat exceptions that leak through callbacks on some 
+	//platforms.
 	try
 	{
-		return wnd ? wnd->WndProc(msg, wParam, lParam) : DefWindowProc(hWnd, msg, wParam, lParam);
+		return wnd ? wnd->WndProc(msg, wParam, lParam) 
+			: DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 	catch (Exception& e)
 	{
-		MessageBoxW(nullptr, e.getMessage().c_str(), L"B³¹d", MB_OK);
+		MessageBoxW(nullptr, e.getMessage().c_str(), L"Error", MB_OK);
 		PostQuitMessage(e.getExitCode());
 		return e.getExitCode();
 	}
 	catch (exception& e)
 	{
 		string s(e.what());
-		MessageBoxW(nullptr, wstring(s.begin(), s.end()).c_str(), L"B³¹d", MB_OK);
+		MessageBoxW(nullptr, wstring(s.begin(), s.end()).c_str(), L"Error", 
+			MB_OK);
 	}
 	catch (const char* str)
 	{
 		string s(str);
-		MessageBoxW(nullptr, wstring(s.begin(), s.end()).c_str(), L"B³¹d", MB_OK);
+		MessageBoxW(nullptr, wstring(s.begin(), s.end()).c_str(), L"Error", 
+			MB_OK);
 	}
 	catch (const wchar_t* str)
 	{
-		MessageBoxW(nullptr, str, L"B³¹d", MB_OK);
+		MessageBoxW(nullptr, str, L"Error", MB_OK);
 	}
 	catch (...)
 	{
-		MessageBoxW(nullptr, L"Nieznany B³¹d", L"B³¹d", MB_OK);
+		MessageBoxW(nullptr, L"Unknown error", L"Error", MB_OK);
 	}
 	PostQuitMessage(EXIT_FAILURE);
 	return EXIT_FAILURE;
