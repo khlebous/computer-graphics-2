@@ -115,6 +115,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="dxApplication.h" />
     <ClInclude Include="dxDevice.h" />
     <ClInclude Include="dxptr.h" />
     <ClInclude Include="dxStructures.h" />
@@ -123,6 +124,7 @@
     <ClInclude Include="windowApplication.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dxApplication.cpp" />
     <ClCompile Include="dxDevice.cpp" />
     <ClCompile Include="dxStructures.cpp" />
     <ClCompile Include="exceptions.cpp" />
