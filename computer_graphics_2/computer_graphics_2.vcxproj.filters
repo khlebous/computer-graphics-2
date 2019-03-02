@@ -67,4 +67,7 @@
     <FxCompile Include="vs.hlsl" />
     <FxCompile Include="ps.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="structs.hlsli" />
+  </ItemGroup>
 </Project>

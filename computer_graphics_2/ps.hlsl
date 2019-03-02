@@ -1,7 +1,4 @@
-struct VSOut {
-	float4 pos : SV_POSITION;
-	float4 col : COLOR;
-};
+#include "structs.hlsli"
 
 float4 main(VSOut i) : SV_TARGET
 {
