@@ -41,7 +41,8 @@ mini::dx_ptr<ID3D11RenderTargetView> DxDevice::CreateRenderTargetView(
 	if (FAILED(hr))
 		THROW_WINAPI;
 
-	return result;}
+	return result;
+}
 
 vector<BYTE> DxDevice::LoadByteCode(const wstring& filename)
 {
@@ -145,4 +146,5 @@ mini::dx_ptr<ID3D11DepthStencilView> DxDevice::CreateDepthStencilView(
 		size.cx, size.cy);
 	dx_ptr<ID3D11Texture2D> texture = CreateTexture(desc);
 
-	return CreateDepthStencilView(texture);}
+	return CreateDepthStencilView(texture);
+}

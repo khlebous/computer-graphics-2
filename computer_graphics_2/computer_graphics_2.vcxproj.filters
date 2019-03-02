@@ -36,6 +36,9 @@
     <ClInclude Include="dxApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vertexPositionColor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="exceptions.cpp">

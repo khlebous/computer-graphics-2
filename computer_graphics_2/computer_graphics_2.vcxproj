@@ -140,6 +140,7 @@
     <ClInclude Include="dxptr.h" />
     <ClInclude Include="dxStructures.h" />
     <ClInclude Include="exceptions.h" />
+    <ClInclude Include="vertexPositionColor.h" />
     <ClInclude Include="window.h" />
     <ClInclude Include="windowApplication.h" />
   </ItemGroup>
