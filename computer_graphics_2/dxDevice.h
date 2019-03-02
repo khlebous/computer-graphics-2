@@ -15,8 +15,12 @@ public:
 	{
 		return m_swapChain;
 	}
-	ID3D11Device* operator->() const { return m_device.get(); }
-
+	ID3D11Device* operator->() const
+	{ 
+		return m_device.get(); 
+	}
+	mini::dx_ptr<ID3D11RenderTargetView> CreateRenderTargetView(
+		const mini::dx_ptr<ID3D11Texture2D>& texture) const;
 private:
 	mini::dx_ptr<ID3D11Device> m_device;
 	mini::dx_ptr<ID3D11DeviceContext> m_context;

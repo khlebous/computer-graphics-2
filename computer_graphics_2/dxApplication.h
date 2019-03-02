@@ -15,4 +15,5 @@ private:
 	void Update();
 
 	DxDevice m_device;
+	mini::dx_ptr<ID3D11RenderTargetView> m_backBuffer;
 };
