@@ -1,4 +1,6 @@
 #include "dxApplication.h"
+#include <iostream>
+
 using namespace mini;
 using namespace std;
 
@@ -52,6 +54,12 @@ DxApplication::DxApplication(HINSTANCE hInstance)
 		static_cast<float>(wndSize.cx) / wndSize.cy,
 		0.1f, 100.0f));
 	m_cbMVP = m_device.CreateConstantBuffer<XMFLOAT4X4>();
+
+	QueryPerformanceFrequency(&li);
+	PCFreq = double(li.QuadPart) * XM_PIDIV4;
+
+	QueryPerformanceCounter(&li);
+	counterStart = li.QuadPart;
 }
 
 std::vector<XMFLOAT2> DxApplication::CreateTriangleVertices()
@@ -167,12 +175,18 @@ void DxApplication::Render()
 
 void DxApplication::Update()
 {
-	XMStoreFloat4x4(&m_modelMtx, XMLoadFloat4x4(&m_modelMtx) *
-		XMMatrixRotationY(0.0005f) * XMMatrixRotationZ(0.0005f));
+	QueryPerformanceCounter(&li);
+	angle += double(li.QuadPart - counterStart) / PCFreq;
+	counterStart = li.QuadPart;
+
+	DirectX::XMFLOAT4X4 new_m_modelMtx;
+	XMStoreFloat4x4(&new_m_modelMtx, XMLoadFloat4x4(&m_modelMtx) *
+		XMMatrixRotationY(angle));
 	D3D11_MAPPED_SUBRESOURCE res;
 	m_device.context()->Map(m_cbMVP.get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
 		&res);
-	XMMATRIX mvp = XMLoadFloat4x4(&m_modelMtx) * XMLoadFloat4x4(&m_viewMtx) * 
+	XMMATRIX mvp = XMLoadFloat4x4(&new_m_modelMtx) * XMLoadFloat4x4(&m_viewMtx) *
 		XMLoadFloat4x4(&m_projMtx);
 	memcpy(res.pData, &mvp, sizeof(XMMATRIX));
-	m_device.context()->Unmap(m_cbMVP.get(), 0);}
+	m_device.context()->Unmap(m_cbMVP.get(), 0);
+}
