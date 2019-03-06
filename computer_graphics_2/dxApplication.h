@@ -18,13 +18,14 @@ protected:
 
 private:
 	void Render();
-	void Update();
+	void Draw0();
+	void Draw1();
 
 	static std::vector<VertexPositionColor> CreateCubeVertices();
 	static std::vector<unsigned short> CreateCubeIndices();
 	
 	DxDevice m_device; 
-	DirectX::XMFLOAT4X4 m_modelMtx, m_viewMtx, m_projMtx;
+	DirectX::XMFLOAT4X4 m_modelMtx0, m_modelMtx1, m_viewMtx, m_projMtx;
 	mini::dx_ptr<ID3D11Buffer> m_cbMVP;
 	mini::dx_ptr<ID3D11Buffer> m_indexBuffer;
 	mini::dx_ptr<ID3D11RenderTargetView> m_backBuffer;

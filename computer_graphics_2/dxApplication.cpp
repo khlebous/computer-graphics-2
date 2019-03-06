@@ -46,7 +46,8 @@ DxApplication::DxApplication(HINSTANCE hInstance)
 	};
 	m_layout = m_device.CreateInputLayout(elements, vsBytes);
 
-	XMStoreFloat4x4(&m_modelMtx, XMMatrixIdentity());
+	XMStoreFloat4x4(&m_modelMtx0, XMMatrixIdentity());
+	XMStoreFloat4x4(&m_modelMtx1, XMMatrixIdentity());
 	XMStoreFloat4x4(&m_viewMtx, XMMatrixRotationX(XMConvertToRadians(-30)) *
 		XMMatrixTranslation(0.0f, 0.0f, 10.0f));
 	XMStoreFloat4x4(&m_projMtx, XMMatrixPerspectiveFovLH(
@@ -83,7 +84,6 @@ int DxApplication::MainLoop()
 		}
 		else
 		{
-			Update();
 			Render();
 			m_device.swapChain()->Present(0, 0);
 		}
@@ -170,17 +170,19 @@ void DxApplication::Render()
 		0, 1, vbs, strides, offsets);
 	m_device.context()->IASetIndexBuffer(m_indexBuffer.get(),
 		DXGI_FORMAT_R16_UINT, 0);
-	m_device.context()->DrawIndexed(36, 0, 0);
+
+	Draw0();
+	Draw1();
 }
 
-void DxApplication::Update()
+void DxApplication::Draw0()
 {
 	QueryPerformanceCounter(&li);
 	angle += double(li.QuadPart - counterStart) / PCFreq;
 	counterStart = li.QuadPart;
 
 	DirectX::XMFLOAT4X4 new_m_modelMtx;
-	XMStoreFloat4x4(&new_m_modelMtx, XMLoadFloat4x4(&m_modelMtx) *
+	XMStoreFloat4x4(&new_m_modelMtx, XMLoadFloat4x4(&m_modelMtx0) *
 		XMMatrixRotationY(angle));
 	D3D11_MAPPED_SUBRESOURCE res;
 	m_device.context()->Map(m_cbMVP.get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
@@ -189,4 +191,24 @@ void DxApplication::Update()
 		XMLoadFloat4x4(&m_projMtx);
 	memcpy(res.pData, &mvp, sizeof(XMMATRIX));
 	m_device.context()->Unmap(m_cbMVP.get(), 0);
+
+	m_device.context()->DrawIndexed(36, 0, 0);
+}
+
+void DxApplication::Draw1()
+{
+	DirectX::XMFLOAT4X4 new_m_modelMtx;
+
+	XMStoreFloat4x4(&new_m_modelMtx, XMLoadFloat4x4(&m_modelMtx1) *
+		XMMatrixTranslation(-5.0f, 0.0f, 0.0f));
+
+	D3D11_MAPPED_SUBRESOURCE res;
+	m_device.context()->Map(m_cbMVP.get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
+		&res);
+	XMMATRIX mvp = XMLoadFloat4x4(&new_m_modelMtx) * XMLoadFloat4x4(&m_viewMtx) *
+		XMLoadFloat4x4(&m_projMtx);
+	memcpy(res.pData, &mvp, sizeof(XMMATRIX));
+	m_device.context()->Unmap(m_cbMVP.get(), 0);
+
+	m_device.context()->DrawIndexed(36, 0, 0);
 }
