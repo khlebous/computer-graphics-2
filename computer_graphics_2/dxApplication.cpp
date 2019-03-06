@@ -1,10 +1,14 @@
 #include "dxApplication.h"
+#include <iostream>
+
 using namespace mini;
 using namespace std;
 
 DxApplication::DxApplication(HINSTANCE hInstance)
 	: WindowApplication(hInstance), m_device(m_window)
 {
+	GetCursorPos(&curr_mouse_pos);
+
 	ID3D11Texture2D *temp = nullptr;
 	m_device.swapChain()->GetBuffer(
 		0,
@@ -44,14 +48,20 @@ DxApplication::DxApplication(HINSTANCE hInstance)
 	};
 	m_layout = m_device.CreateInputLayout(elements, vsBytes);
 
-	XMStoreFloat4x4(&m_modelMtx, XMMatrixIdentity());
-	XMStoreFloat4x4(&m_viewMtx, XMMatrixRotationX(XMConvertToRadians(-30)) *
-		XMMatrixTranslation(0.0f, 0.0f, 10.0f));
+	XMStoreFloat4x4(&m_modelMtx0, XMMatrixIdentity());
+	XMStoreFloat4x4(&m_modelMtx1, XMMatrixIdentity());
+	RecalculateViewMtx();
 	XMStoreFloat4x4(&m_projMtx, XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(45),
 		static_cast<float>(wndSize.cx) / wndSize.cy,
 		0.1f, 100.0f));
 	m_cbMVP = m_device.CreateConstantBuffer<XMFLOAT4X4>();
+
+	QueryPerformanceFrequency(&li);
+	PCFreq = double(li.QuadPart) * XM_PIDIV4;
+
+	QueryPerformanceCounter(&li);
+	counterStart = li.QuadPart;
 }
 
 std::vector<XMFLOAT2> DxApplication::CreateTriangleVertices()
@@ -75,7 +85,6 @@ int DxApplication::MainLoop()
 		}
 		else
 		{
-			Update();
 			Render();
 			m_device.swapChain()->Present(0, 0);
 		}
@@ -162,17 +171,89 @@ void DxApplication::Render()
 		0, 1, vbs, strides, offsets);
 	m_device.context()->IASetIndexBuffer(m_indexBuffer.get(),
 		DXGI_FORMAT_R16_UINT, 0);
-	m_device.context()->DrawIndexed(36, 0, 0);
+
+	Draw0();
+	Draw1();
 }
 
-void DxApplication::Update()
+void DxApplication::Draw0()
 {
-	XMStoreFloat4x4(&m_modelMtx, XMLoadFloat4x4(&m_modelMtx) *
-		XMMatrixRotationY(0.0005f) * XMMatrixRotationZ(0.0005f));
+	QueryPerformanceCounter(&li);
+	angle += double(li.QuadPart - counterStart) / PCFreq;
+	counterStart = li.QuadPart;
+
+	DirectX::XMFLOAT4X4 new_m_modelMtx;
+	XMStoreFloat4x4(&new_m_modelMtx, XMLoadFloat4x4(&m_modelMtx0) *
+		XMMatrixRotationY(angle));
 	D3D11_MAPPED_SUBRESOURCE res;
 	m_device.context()->Map(m_cbMVP.get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
 		&res);
-	XMMATRIX mvp = XMLoadFloat4x4(&m_modelMtx) * XMLoadFloat4x4(&m_viewMtx) * 
+	XMMATRIX mvp = XMLoadFloat4x4(&new_m_modelMtx) * XMLoadFloat4x4(&m_viewMtx) *
 		XMLoadFloat4x4(&m_projMtx);
 	memcpy(res.pData, &mvp, sizeof(XMMATRIX));
-	m_device.context()->Unmap(m_cbMVP.get(), 0);}
+	m_device.context()->Unmap(m_cbMVP.get(), 0);
+
+	m_device.context()->DrawIndexed(36, 0, 0);
+}
+
+void DxApplication::Draw1()
+{
+	DirectX::XMFLOAT4X4 new_m_modelMtx;
+
+	XMStoreFloat4x4(&new_m_modelMtx, XMLoadFloat4x4(&m_modelMtx1) *
+		XMMatrixTranslation(-5.0f, 0.0f, 0.0f));
+
+	D3D11_MAPPED_SUBRESOURCE res;
+	m_device.context()->Map(m_cbMVP.get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
+		&res);
+	XMMATRIX mvp = XMLoadFloat4x4(&new_m_modelMtx) * XMLoadFloat4x4(&m_viewMtx) *
+		XMLoadFloat4x4(&m_projMtx);
+	memcpy(res.pData, &mvp, sizeof(XMMATRIX));
+	m_device.context()->Unmap(m_cbMVP.get(), 0);
+
+	m_device.context()->DrawIndexed(36, 0, 0);
+}
+
+void DxApplication::RecalculateViewMtx()
+{
+	XMStoreFloat4x4(&m_viewMtx, XMMatrixTranslation(0.0f, 0.0f, camera_distance)
+		* XMMatrixRotationY(XMConvertToRadians(camera_angle)));
+}
+
+bool DxApplication::ProcessMessage(WindowMessage & msg)
+{
+	if (msg.message == WM_LBUTTONDOWN)
+		left_mouse_down = true;
+
+	if (msg.message == WM_RBUTTONDOWN)
+		right_mouse_down = true;
+
+	if (msg.message == WM_LBUTTONUP)
+		left_mouse_down = false;
+
+	if (msg.message == WM_RBUTTONUP)
+		right_mouse_down = false;
+
+	if (msg.message == WM_MOUSEMOVE)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+
+		if (left_mouse_down)
+		{
+			camera_angle -= 0.5f * (cursorPos.x - curr_mouse_pos.x);
+			if (camera_angle < -90.0f) camera_angle = -90.0f;
+			else if (camera_angle > 90.0f) camera_angle = 90.0f;
+		}
+		if (right_mouse_down)
+		{
+			camera_distance += 0.1f * (cursorPos.y - curr_mouse_pos.y);
+			if (camera_distance < 0.0f) camera_distance = 0.0f;
+			else if (camera_distance > 10.0f) camera_distance = 10.0f;
+		}
+		curr_mouse_pos = cursorPos;
+		RecalculateViewMtx();
+	}
+
+	return false;
+}
