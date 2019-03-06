@@ -6,6 +6,7 @@
 #include <DirectXMath.h>
 
 using namespace DirectX;
+using namespace mini;
 
 class DxApplication : public mini::WindowApplication
 {
@@ -15,6 +16,7 @@ public:
 
 protected:
 	int MainLoop() override;
+	bool ProcessMessage(WindowMessage& msg) override;
 
 private:
 	void Render();
@@ -34,6 +36,13 @@ private:
 	mini::dx_ptr<ID3D11VertexShader> m_vertexShader;
 	mini::dx_ptr<ID3D11PixelShader> m_pixelShader;
 	mini::dx_ptr<ID3D11InputLayout> m_layout;
+
+	float camera_angle = -0.0f;
+	float camera_distance = 10.0f;
+	void RecalculateViewMtx();
+	POINT curr_mouse_pos;
+	bool left_mouse_down = false;
+	bool right_mouse_down = false;
 
 	LARGE_INTEGER li;
 	double PCFreq = 0.0;

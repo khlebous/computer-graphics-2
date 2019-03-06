@@ -64,7 +64,7 @@ namespace mini
 		 * should be set to the result of message processing.
 		 * @sa IWindowMessageHandler::ProcessMessage
 		 *********************************************************************/
-		bool ProcessMessage(WindowMessage& msg) override { return false; }
+		virtual bool ProcessMessage(WindowMessage& msg) override { return false; }
 
 		/******************************************************************//*!
 		 * @brief Main loop of the program.

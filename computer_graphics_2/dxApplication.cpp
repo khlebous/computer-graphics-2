@@ -7,6 +7,8 @@ using namespace std;
 DxApplication::DxApplication(HINSTANCE hInstance)
 	: WindowApplication(hInstance), m_device(m_window)
 {
+	GetCursorPos(&curr_mouse_pos);
+
 	ID3D11Texture2D *temp = nullptr;
 	m_device.swapChain()->GetBuffer(
 		0,
@@ -48,8 +50,7 @@ DxApplication::DxApplication(HINSTANCE hInstance)
 
 	XMStoreFloat4x4(&m_modelMtx0, XMMatrixIdentity());
 	XMStoreFloat4x4(&m_modelMtx1, XMMatrixIdentity());
-	XMStoreFloat4x4(&m_viewMtx, XMMatrixRotationX(XMConvertToRadians(-30)) *
-		XMMatrixTranslation(0.0f, 0.0f, 10.0f));
+	RecalculateViewMtx();
 	XMStoreFloat4x4(&m_projMtx, XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(45),
 		static_cast<float>(wndSize.cx) / wndSize.cy,
@@ -211,4 +212,48 @@ void DxApplication::Draw1()
 	m_device.context()->Unmap(m_cbMVP.get(), 0);
 
 	m_device.context()->DrawIndexed(36, 0, 0);
+}
+
+void DxApplication::RecalculateViewMtx()
+{
+	XMStoreFloat4x4(&m_viewMtx, XMMatrixTranslation(0.0f, 0.0f, camera_distance)
+		* XMMatrixRotationY(XMConvertToRadians(camera_angle)));
+}
+
+bool DxApplication::ProcessMessage(WindowMessage & msg)
+{
+	if (msg.message == WM_LBUTTONDOWN)
+		left_mouse_down = true;
+
+	if (msg.message == WM_RBUTTONDOWN)
+		right_mouse_down = true;
+
+	if (msg.message == WM_LBUTTONUP)
+		left_mouse_down = false;
+
+	if (msg.message == WM_RBUTTONUP)
+		right_mouse_down = false;
+
+	if (msg.message == WM_MOUSEMOVE)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+
+		if (left_mouse_down)
+		{
+			camera_angle -= 0.5f * (cursorPos.x - curr_mouse_pos.x);
+			if (camera_angle < -90.0f) camera_angle = -90.0f;
+			else if (camera_angle > 90.0f) camera_angle = 90.0f;
+		}
+		if (right_mouse_down)
+		{
+			camera_distance += 0.1f * (cursorPos.y - curr_mouse_pos.y);
+			if (camera_distance < 0.0f) camera_distance = 0.0f;
+			else if (camera_distance > 10.0f) camera_distance = 10.0f;
+		}
+		curr_mouse_pos = cursorPos;
+		RecalculateViewMtx();
+	}
+
+	return false;
 }
