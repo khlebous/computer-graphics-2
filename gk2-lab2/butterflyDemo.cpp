@@ -292,7 +292,12 @@ void ButterflyDemo::DrawBox()
 void ButterflyDemo::DrawDodecahedron(bool colors)
 //Draw dodecahedron. If color is true, use render faces with coresponding colors. Otherwise render using white color
 {
-	//TODO : 1.02. Draw all dodecahedron sides with colors - ignore function parameter for now
+	for (size_t i = 0; i < 12; i++)
+	{
+		m_cbSurfaceColor.Update(m_device.context(), COLORS[i]);
+		m_cbWorld.Update(m_device.context(), m_dodecahedronMtx[i]);
+		m_pentagon.Render(m_device.context());
+	}
 
 	//TODO : 1.11. Modify function so if colors parameter is set to false, all faces are drawn white instead
 
