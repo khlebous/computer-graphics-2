@@ -134,7 +134,29 @@ void ButterflyDemo::CreateRenderStates()
 void ButterflyDemo::CreateDodecahadronMtx()
 //Compute dodecahedronMtx and mirrorMtx
 {
-	//TODO : 1.01. calculate m_dodecahedronMtx matrices
+	XMMATRIX mtx;
+
+	XMStoreFloat4x4(&m_dodecahedronMtx[0],
+		XMMatrixTranslation(0.0f, 0.0f, DODECAHEDRON_H / 2));
+
+	mtx = XMLoadFloat4x4(&m_dodecahedronMtx[0]);
+	XMStoreFloat4x4(&m_dodecahedronMtx[1], mtx *
+		XMMatrixRotationZ(XM_PI) *
+		XMMatrixRotationY(DODECAHEDRON_A - XM_PI));
+
+	mtx = XMLoadFloat4x4(&m_dodecahedronMtx[1]);
+	for (size_t i = 1; i <= 5; i++)
+	{
+		XMStoreFloat4x4(&m_dodecahedronMtx[i + 1], mtx *
+			XMMatrixRotationZ(i * XM_2PI / 5.0f));
+	}
+
+	for (size_t i = 0; i < 6; i++)
+	{
+		mtx = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
+		XMStoreFloat4x4(&m_dodecahedronMtx[i + 6], mtx *
+			XMMatrixRotationY(XM_PI)) ;
+	}
 
 	//TODO : 1.09. calcuate m_mirrorMtx matrices
 }
