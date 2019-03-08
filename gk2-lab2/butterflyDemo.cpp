@@ -45,10 +45,10 @@ const XMFLOAT4 ButterflyDemo::COLORS[] = {
 #pragma region Initalization
 ButterflyDemo::ButterflyDemo(HINSTANCE hInstance)
 	: Gk2ExampleBase(hInstance, 1280, 720, L"Motyl"),
-	  m_cbWorld(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
-	  m_cbView(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()),
-	  m_cbLighting(m_device.CreateConstantBuffer<Lighting>()),
-	  m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>())
+	m_cbWorld(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
+	m_cbView(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()),
+	m_cbLighting(m_device.CreateConstantBuffer<Lighting>()),
+	m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>())
 
 {
 	//Projection matrix
@@ -114,7 +114,7 @@ void ButterflyDemo::CreateRenderStates()
 	m_dssWrite = m_device.CreateDepthStencilState(dssDesc);
 
 	//TODO : 1.18. Setup depth stencil state for testing
-	
+
 	m_dssTest = m_device.CreateDepthStencilState(dssDesc);
 
 	//TODO : 1.10. Setup rasterizer state with ccw front faces
@@ -155,34 +155,101 @@ void ButterflyDemo::CreateDodecahadronMtx()
 	{
 		mtx = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
 		XMStoreFloat4x4(&m_dodecahedronMtx[i + 6], mtx *
-			XMMatrixRotationY(XM_PI)) ;
+			XMMatrixRotationY(XM_PI));
+	}
+
+	for (size_t i = 0; i < 12; i++)
+	{
+		mtx = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
+		XMStoreFloat4x4(&m_dodecahedronMtx[i], mtx *
+			XMMatrixScaling(2.0f, 2.0f, 2.0f));
 	}
 
 	//TODO : 1.09. calcuate m_mirrorMtx matrices
 }
 
 XMFLOAT3 ButterflyDemo::MoebiusStripPos(float t, float s)
-//TODO : 1.04. Compute the position of point on the Moebius strip for parameters t and s
 {
-	return {};
+	return XMFLOAT3(
+		XMScalarCos(t) * (MOEBIUS_R + MOEBIUS_W * s * XMScalarCos(0.5f * t)),
+		XMScalarSin(t) * (MOEBIUS_R + MOEBIUS_W * s * XMScalarCos(0.5f * t)),
+		MOEBIUS_W * s * XMScalarSin(0.5f * t)
+	);
 }
 
 XMVECTOR ButterflyDemo::MoebiusStripDs(float t, float s)
-//TODO : 1.05. Return the s-derivative of point on the Moebius strip for parameters t and s
 {
-	return {};
+	return XMVector3Normalize(XMVectorSet(
+		XMScalarCos(0.5f * t)*XMScalarCos(t),
+		XMScalarCos(0.5f * t)*XMScalarSin(t),
+		XMScalarSin(0.5f * t),
+		0
+	));
 }
 
 XMVECTOR ButterflyDemo::MoebiusStripDt(float t, float s)
-//TODO : 1.06. Compute the t-derivative of point on the Moebius strip for parameters t and s
 {
-	return {};
+	return XMVector3Normalize(XMVectorSet(-MOEBIUS_R * XMScalarSin(t) -
+		0.5f * s * MOEBIUS_W * XMScalarSin(0.5f) * XMScalarCos(t) -
+		MOEBIUS_W * s * XMScalarCos(0.5 * t) * XMScalarSin(t),
+
+		MOEBIUS_R * XMScalarCos(t) -
+		0.5f * s * MOEBIUS_W * XMScalarSin(0.5f) * XMScalarSin(t) +
+		MOEBIUS_W * s * XMScalarCos(0.5 * t) * XMScalarCos(t),
+
+		0.5f * s * MOEBIUS_W * XMScalarCos(t),
+
+		0
+	));
 }
 
 void ButterflyDemo::CreateMoebuisStrip()
-//TODO : 1.07. Create Moebius strip mesh
 {
+	vector<VertexPositionNormal> vertices = vector<VertexPositionNormal>();
+	vector<unsigned short> indices = vector<unsigned short>();
 
+	VertexPositionNormal vpn;
+	for (size_t i = 0; i < MOEBIUS_N; i++)
+	{
+		float angle = i * 4 * XM_PI / MOEBIUS_N;
+
+		vpn.position = MoebiusStripPos(angle, -1);
+		XMStoreFloat3(&vpn.normal,
+			XMVector3Cross(MoebiusStripDt(angle, -1), MoebiusStripDs(angle, -1)));
+		vertices.push_back(vpn);
+
+		vpn.position = MoebiusStripPos(angle, 0);
+		XMStoreFloat3(&vpn.normal,
+			XMVector3Cross(MoebiusStripDt(angle, 0), MoebiusStripDs(angle, 0)));
+		vertices.push_back(vpn);
+
+		vpn.position = MoebiusStripPos(angle, 1);
+		XMStoreFloat3(&vpn.normal,
+			XMVector3Cross(MoebiusStripDt(angle, 1), MoebiusStripDs(angle, 1)));
+		vertices.push_back(vpn);
+	}
+
+	int MOEBIUS_3N = MOEBIUS_N * 3;
+	for (size_t i = 0; i < MOEBIUS_3N; i += 3)
+	{
+		indices.push_back(i);
+		indices.push_back((i + 4) % MOEBIUS_3N);
+		indices.push_back(i + 1);
+
+		indices.push_back(i);
+		indices.push_back((i + 5) % MOEBIUS_3N);
+		indices.push_back(i + 2);
+
+		indices.push_back(i);
+		indices.push_back((i + 3) % MOEBIUS_3N);
+		indices.push_back((i + 4) % MOEBIUS_3N);
+
+		indices.push_back(i + 1);
+		indices.push_back((i + 4) % MOEBIUS_3N);
+		indices.push_back((i + 5) % MOEBIUS_3N);
+	}
+
+	m_moebius = m_device.CreateMesh(indices, vertices);
 }
 #pragma endregion
 
@@ -304,9 +371,11 @@ void ButterflyDemo::DrawDodecahedron(bool colors)
 }
 
 void ButterflyDemo::DrawMoebiusStrip()
-//TODO : 1.08. Draw the Moebius strip mesh
 {
-
+	XMFLOAT4X4 worldMtx;
+	XMStoreFloat4x4(&worldMtx, XMMatrixIdentity());
+	m_cbWorld.Update(m_device.context(), worldMtx);
+	m_moebius.Render(m_device.context());
 }
 
 void ButterflyDemo::DrawButterfly()
@@ -368,7 +437,6 @@ void ButterflyDemo::Render()
 	//render the rest of the scene with all lights
 	Set3Lights();
 	m_cbSurfaceColor.Update(m_device.context(), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	//TODO : 1.03. [optional] Comment the following line
 	DrawBox();
 	DrawMoebiusStrip();
 	DrawButterfly();
