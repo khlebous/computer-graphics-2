@@ -16,7 +16,7 @@ const float ButterflyDemo::MOEBIUS_R = 1.0f;
 const float ButterflyDemo::MOEBIUS_W = 0.1f;
 const unsigned int ButterflyDemo::MOEBIUS_N = 128;
 
-const float ButterflyDemo::LAP_TIME = 10.0f;
+const float ButterflyDemo::LAP_TIME = 20.0f;
 const float ButterflyDemo::FLAP_TIME = 2.0f;
 const float ButterflyDemo::WING_W = 0.15f;
 const float ButterflyDemo::WING_H = 0.1f;
@@ -277,7 +277,6 @@ void ButterflyDemo::UpdateCameraCB(DirectX::XMFLOAT4X4 cameraMtx)
 }
 
 void ButterflyDemo::UpdateButterfly(float dtime)
-//TODO : 1.26. Compute the matrices for butterfly wings. Position on the strip is determined based on time
 {
 	static float lap = 0.0f;
 	lap += dtime;
@@ -292,6 +291,26 @@ void ButterflyDemo::UpdateButterfly(float dtime)
 		a = 2 * WING_MAX_A - a;
 	//Write the rest of code here
 
+	XMVECTOR pt = MoebiusStripDt(t, 0);
+	XMVECTOR ps = MoebiusStripDs(t, 0);
+	XMVECTOR pt_cross_ps = XMVector3Cross(ps, pt);
+
+	XMFLOAT3 pos = MoebiusStripPos(t, 0);
+	XMFLOAT4 pos4(pos.x, pos.y, pos.z, 1.0f);
+	XMVECTOR p = XMLoadFloat4(&pos4);
+	XMMATRIX moebiusMtx;
+	moebiusMtx.r[0] = pt;
+	moebiusMtx.r[1] = pt_cross_ps;
+	moebiusMtx.r[2] = ps;
+	moebiusMtx.r[3] = p;
+
+	XMMATRIX common_model_mtx = XMMatrixTranslation(0.0f, 1.0f, 0.0f) *
+		XMMatrixScaling(WING_W, WING_H, 1);
+
+	XMStoreFloat4x4(&m_wingMtx[1], common_model_mtx * XMMatrixRotationX(-a) * 
+		moebiusMtx);
+	XMStoreFloat4x4(&m_wingMtx[0], common_model_mtx * XMMatrixRotationX(a) * 
+		moebiusMtx);
 }
 #pragma endregion
 
@@ -379,9 +398,12 @@ void ButterflyDemo::DrawMoebiusStrip()
 }
 
 void ButterflyDemo::DrawButterfly()
-//TODO : 1.27. Draw the butterfly
 {
-
+	for (size_t i = 0; i < 2; i++)
+	{
+		m_cbWorld.Update(m_device.context(), m_wingMtx[i]);
+		m_wing.Render(m_device.context());
+	}
 }
 
 void ButterflyDemo::DrawBilboards()
@@ -437,7 +459,7 @@ void ButterflyDemo::Render()
 	//render the rest of the scene with all lights
 	Set3Lights();
 	m_cbSurfaceColor.Update(m_device.context(), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	DrawBox();
+	//DrawBox();
 	DrawMoebiusStrip();
 	DrawButterfly();
 	DrawBilboards();
