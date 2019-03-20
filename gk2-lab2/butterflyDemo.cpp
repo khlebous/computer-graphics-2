@@ -120,13 +120,12 @@ void ButterflyDemo::CreateRenderStates()
 	m_rsCCW = m_device.CreateRasterizerState(RasterizerDescription(true));
 
 	BlendDescription bsDesc;
-	//TODO : 1.23. Setup alpha blending state
+	
+	// Setup alpha blending state
+	m_bsAlpha = m_device.CreateBlendState(bsDesc.AlphaBlendDescription());
 
-	m_bsAlpha = m_device.CreateBlendState(bsDesc);
-
-	//TODO : 1.30. Setup additive blending state
-
-	m_bsAdd = m_device.CreateBlendState(bsDesc);
+	// Setup additive blending state
+	m_bsAdd = m_device.CreateBlendState(bsDesc.AdditiveBlendDescription());
 }
 
 void ButterflyDemo::CreateDodecahadronMtx()
@@ -472,8 +471,7 @@ void ButterflyDemo::Render()
 	//render dodecahedron with one light and alpha blending
 	m_device.context()->OMSetBlendState(m_bsAlpha.get(), nullptr, BS_MASK);
 	Set1Light();
-	//DrawDodecahedron(true);
-	//TODO : 1.24. Uncomment the above line again
+	DrawDodecahedron(true);
 	m_device.context()->OMSetBlendState(nullptr, nullptr, BS_MASK);
 
 	//render the rest of the scene with all lights
