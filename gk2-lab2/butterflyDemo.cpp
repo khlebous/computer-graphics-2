@@ -109,7 +109,7 @@ void ButterflyDemo::CreateRenderStates()
 //Setup render states used in various stages of the scene rendering
 {
 	DepthStencilDescription dssDesc;
-	
+
 	// Setup depth stancil state for writing
 	m_dssWrite = m_device.CreateDepthStencilState(dssDesc.StencilWriteDescription());
 
@@ -120,7 +120,7 @@ void ButterflyDemo::CreateRenderStates()
 	m_rsCCW = m_device.CreateRasterizerState(RasterizerDescription(true));
 
 	BlendDescription bsDesc;
-	
+
 	// Setup alpha blending state
 	m_bsAlpha = m_device.CreateBlendState(bsDesc.AlphaBlendDescription());
 
@@ -349,21 +349,16 @@ void ButterflyDemo::Set1Light()
 }
 
 void ButterflyDemo::Set3Lights()
-//Setup one white positional light at the camera
-//TODO : 1.28. Setup two additional positional lights, green and blue.
 {
 	Lighting l{
 		/*.ambientColor = */ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		/*.surface = */ XMFLOAT4(0.2f, 0.8f, 0.8f, 200.0f),
 		/*.lights =*/{
-			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }
-			//Write the rest of the code here
-
+			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
+			{ /*.position =*/ GREEN_LIGHT_POS, /*.color =*/ XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+			{ /*.position =*/ BLUE_LIGHT_POS, /*.color =*/ XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) }
 		}
 	};
-
-	//comment the following line when structure is filled
-	ZeroMemory(&l.lights[1], sizeof(Light) * 2);
 
 	m_cbLighting.Update(m_device.context(), l);
 }
