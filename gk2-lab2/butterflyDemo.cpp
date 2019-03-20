@@ -109,17 +109,15 @@ void ButterflyDemo::CreateRenderStates()
 //Setup render states used in various stages of the scene rendering
 {
 	DepthStencilDescription dssDesc;
-	//TODO : 1.17. Setup depth stancil state for writing
+	
+	// Setup depth stancil state for writing
+	m_dssWrite = m_device.CreateDepthStencilState(dssDesc.StencilWriteDescription());
 
-	m_dssWrite = m_device.CreateDepthStencilState(dssDesc);
+	// Setup depth stencil state for testing
+	m_dssTest = m_device.CreateDepthStencilState(dssDesc.StencilTestDescription());
 
-	//TODO : 1.18. Setup depth stencil state for testing
-
-	m_dssTest = m_device.CreateDepthStencilState(dssDesc);
-
-	//TODO : 1.10. Setup rasterizer state with ccw front faces
-
-	m_rsCCW = m_device.CreateRasterizerState(RasterizerDescription());
+	// Setup rasterizer state with ccw front faces
+	m_rsCCW = m_device.CreateRasterizerState(RasterizerDescription(true));
 
 	BlendDescription bsDesc;
 	//TODO : 1.23. Setup alpha blending state
@@ -384,15 +382,13 @@ void ButterflyDemo::DrawBox()
 void ButterflyDemo::DrawDodecahedron(bool colors)
 //Draw dodecahedron. If color is true, use render faces with coresponding colors. Otherwise render using white color
 {
+	XMFLOAT4 white_color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	for (size_t i = 0; i < 12; i++)
 	{
-		m_cbSurfaceColor.Update(m_device.context(), COLORS[i]);
+		m_cbSurfaceColor.Update(m_device.context(), colors ? COLORS[i] : white_color);
 		m_cbWorld.Update(m_device.context(), m_dodecahedronMtx[i]);
 		m_pentagon.Render(m_device.context());
 	}
-
-	//TODO : 1.11. Modify function so if colors parameter is set to false, all faces are drawn white instead
-
 }
 
 void ButterflyDemo::DrawMoebiusStrip()
@@ -426,24 +422,43 @@ void ButterflyDemo::DrawBilboards()
 void ButterflyDemo::DrawMirroredWorld(unsigned int i)
 //Draw the mirrored scene reflected in the i-th dodecahedron face
 {
-	//TODO : 1.19. Setup render state for writing to the stencil buffer
+	// Setup render state for writing to the stencil buffer
+	m_device.context()->OMSetDepthStencilState(m_dssWrite.get(), i + 1);
 
-	//TODO : 1.20. Draw the i-th face
+	// Draw the i-th face
+	m_cbWorld.Update(m_device.context(), m_dodecahedronMtx[i]);
+	m_pentagon.Render(m_device.context());
 
-	//TODO : 1.21. Setup depth stencil state for rendering mirrored world
+	// Setup depth stencil state for rendering mirrored world
+	m_device.context()->OMSetDepthStencilState(m_dssTest.get(), i + 1);
 
-	//TODO : 1.12. Setup rasterizer state and view matrix for rendering the mirrored world
+	// Setup rasterizer state and view matrix for rendering the mirrored world
+	m_device.context()->RSSetState(m_rsCCW.get());
 
-	//TODO : 1.13. Draw objects of the mirrored scene - dodecahedron should be drawn with only one light and no colors and without blending
+	// Draw objects of the mirrored scene - dodecahedron should be drawn with only one light
+	// and no colors and without blending
+	XMMATRIX m_view = m_camera.getViewMatrix();
+	XMFLOAT4X4 new_view;
+	XMStoreFloat4x4(&new_view, XMLoadFloat4x4(&m_mirrorMtx[i]) * m_view);
+	UpdateCameraCB(new_view);
+	Set3Lights();
+	DrawMoebiusStrip();
+	DrawButterfly();
+	Set1Light();
+	DrawDodecahedron(false);
 
-	//TODO : 1.14. Restore rasterizer state to it's original value
+	// Restore rasterizer state to it's original value
+	m_device.context()->RSSetState(nullptr);
 
 	//TODO : 1.36. Draw mirrored bilboards - they need to be drawn after restoring rasterizer state, but with mirrored view matrix
 
-	//TODO : 1.15. Restore view matrix to its original value
+	// Restore view matrix to its original value
+	XMFLOAT4X4 old_view;
+	XMStoreFloat4x4(&old_view, m_view);
+	UpdateCameraCB(old_view);
 
-	//TODO : 1.22. Restore depth stencil state to it's original value
-
+	// Restore depth stencil state to it's original value
+	m_device.context()->OMSetDepthStencilState(nullptr, 0);
 }
 
 void ButterflyDemo::Render()
@@ -457,8 +472,7 @@ void ButterflyDemo::Render()
 	//render dodecahedron with one light and alpha blending
 	m_device.context()->OMSetBlendState(m_bsAlpha.get(), nullptr, BS_MASK);
 	Set1Light();
-	//TODO : 1.16. Comment the following line for now
-	DrawDodecahedron(true);
+	//DrawDodecahedron(true);
 	//TODO : 1.24. Uncomment the above line again
 	m_device.context()->OMSetBlendState(nullptr, nullptr, BS_MASK);
 
