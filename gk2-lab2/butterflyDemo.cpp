@@ -165,7 +165,13 @@ void ButterflyDemo::CreateDodecahadronMtx()
 			XMMatrixScaling(2.0f, 2.0f, 2.0f));
 	}
 
-	//TODO : 1.09. calcuate m_mirrorMtx matrices
+	XMMATRIX m_scale = XMMatrixScaling(1.0f, 1.0f, -1.0f);
+	for (size_t i = 0; i < 12; i++)
+	{
+		XMMATRIX m = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
+		XMMATRIX m_inverse = XMMatrixInverse(nullptr, m);
+		XMStoreFloat4x4(&m_mirrorMtx[i], m_inverse * m_scale * m);
+	}
 }
 
 XMFLOAT3 ButterflyDemo::MoebiusStripPos(float t, float s)
@@ -307,9 +313,9 @@ void ButterflyDemo::UpdateButterfly(float dtime)
 	XMMATRIX common_model_mtx = XMMatrixTranslation(0.0f, 1.0f, 0.0f) *
 		XMMatrixScaling(WING_W, WING_H, 1);
 
-	XMStoreFloat4x4(&m_wingMtx[1], common_model_mtx * XMMatrixRotationX(-a) * 
+	XMStoreFloat4x4(&m_wingMtx[1], common_model_mtx * XMMatrixRotationX(-a) *
 		moebiusMtx);
-	XMStoreFloat4x4(&m_wingMtx[0], common_model_mtx * XMMatrixRotationX(a) * 
+	XMStoreFloat4x4(&m_wingMtx[0], common_model_mtx * XMMatrixRotationX(a) *
 		moebiusMtx);
 }
 #pragma endregion
