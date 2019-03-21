@@ -77,40 +77,48 @@ MeshLoader::indices_t MeshLoader::BoxIndices()
 	};
 }
 
-MeshLoader::vpn_mesh_t MeshLoader::CreateDoubleSidedRectangle(float width, 
+MeshLoader::vpn_mesh_t MeshLoader::CreateDoubleSidedRectangle(float width,
 	float height)
 {
 	vpn_verts_t vertices;
 	vertices.push_back({
 		XMFLOAT3{ -0.5f * width, -0.5f * height, 0 },
-		XMFLOAT3{ 0.0f, 0.0f, -1.0f}});
+		XMFLOAT3{ 0.0f, 0.0f, -1.0f} });
 	vertices.push_back({
 		XMFLOAT3{ 0.5f * width, -0.5f * height, 0},
-		XMFLOAT3{ 0.0f, 0.0f, -1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, -1.0f } });
 	vertices.push_back({
 		XMFLOAT3{ 0.5f * width, 0.5f * height, 0.0f},
-		XMFLOAT3{ 0.0f, 0.0f, -1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, -1.0f } });
 	vertices.push_back({
 		XMFLOAT3{-0.5f * width, 0.5f * height, 0.0f},
-		XMFLOAT3{ 0.0f, 0.0f, -1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, -1.0f } });
 	vertices.push_back({
 		XMFLOAT3{ -0.5f * width, -0.5f * height, 0 },
-		XMFLOAT3{ 0.0f, 0.0f, 1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, 1.0f } });
 	vertices.push_back({
 		XMFLOAT3{ 0.5f * width, -0.5f * height, 0 },
-		XMFLOAT3{ 0.0f, 0.0f, 1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, 1.0f } });
 	vertices.push_back({
 		XMFLOAT3{ 0.5f * width, 0.5f * height, 0.0f },
-		XMFLOAT3{ 0.0f, 0.0f, 1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, 1.0f } });
 	vertices.push_back({
 		XMFLOAT3{ -0.5f * width, 0.5f * height, 0.0f },
-		XMFLOAT3{ 0.0f, 0.0f, 1.0f }});
+		XMFLOAT3{ 0.0f, 0.0f, 1.0f } });
 	return { vertices, {0,2,1, 0,3,2, 4,5,6, 4,6,7} };
 }
 
-MeshLoader::vp_mesh_t MeshLoader::CreateRectangleBilboard(float width, 
-	float height)
-//TODO : 1.29. Initialize vertex and index list for bilboards
+MeshLoader::vp_mesh_t MeshLoader::CreateRectangleBilboard(float width, float height)
+// Initialize vertex and index list for bilboards
 {
-	return {};
+	return
+	{
+		{
+			{ -0.5f*width, -0.5f*height, 0.0f },
+			{ -0.5f*width, +0.5f*height, 0.0f },
+			{ +0.5f*width, +0.5f*height, 0.0f },
+			{ +0.5f*width, -0.5f*height, 0.0f }
+		},
+			{0,1,2,0,2,3}
+	};
 }

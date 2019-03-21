@@ -21,11 +21,16 @@ const float ButterflyDemo::FLAP_TIME = 2.0f;
 const float ButterflyDemo::WING_W = 0.15f;
 const float ButterflyDemo::WING_H = 0.1f;
 const float ButterflyDemo::WING_MAX_A = 8.0f * XM_PIDIV2 / 9.0f; //80 degrees
+const float ButterflyDemo::BILBOARD_SCALE = 0.3f;
 
 const unsigned int ButterflyDemo::BS_MASK = 0xffffffff;
 
 const XMFLOAT4 ButterflyDemo::GREEN_LIGHT_POS = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 const XMFLOAT4 ButterflyDemo::BLUE_LIGHT_POS = XMFLOAT4(-1.0f, -1.0f, -1.0f, 1.0f);
+const XMFLOAT4 ButterflyDemo::GREEN_COLOR = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+const XMFLOAT4 ButterflyDemo::BLUE_COLOR = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+const XMFLOAT4 ButterflyDemo::WHITE_COLOR = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
 const XMFLOAT4 ButterflyDemo::COLORS[] = {
 	XMFLOAT4(253.0f / 255.0f, 198.0f / 255.0f, 137.0f / 255.0f, 100.0f / 255.0f),
 	XMFLOAT4(255.0f / 255.0f, 247.0f / 255.0f, 153.0f / 255.0f, 100.0f / 255.0f),
@@ -335,13 +340,12 @@ void ButterflyDemo::SetBilboardShaders()
 }
 
 void ButterflyDemo::Set1Light()
-//Setup one positional light at the camera
 {
 	Lighting l{
 		/*.ambientColor = */ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		/*.surface = */ XMFLOAT4(0.2f, 0.8f, 0.8f, 200.0f),
 		/*.lights =*/ {
-			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }
+			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ WHITE_COLOR }
 			//other 2 lights set to 0
 		}
 	};
@@ -354,9 +358,9 @@ void ButterflyDemo::Set3Lights()
 		/*.ambientColor = */ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		/*.surface = */ XMFLOAT4(0.2f, 0.8f, 0.8f, 200.0f),
 		/*.lights =*/{
-			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
-			{ /*.position =*/ GREEN_LIGHT_POS, /*.color =*/ XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-			{ /*.position =*/ BLUE_LIGHT_POS, /*.color =*/ XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) }
+			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ WHITE_COLOR },
+			{ /*.position =*/ GREEN_LIGHT_POS, /*.color =*/ GREEN_COLOR },
+			{ /*.position =*/ BLUE_LIGHT_POS, /*.color =*/ BLUE_COLOR }
 		}
 	};
 
@@ -405,12 +409,31 @@ void ButterflyDemo::DrawButterfly()
 void ButterflyDemo::DrawBilboards()
 //Setup bilboards rendering and draw them
 {
-	//TODO : 1.33. Setup shaders and blend state
+	// Setup shaders and blend state
+	SetBilboardShaders();
+	m_device.context()->OMSetBlendState(m_bsAdd.get(), nullptr, BS_MASK);
 
-	//TODO : 1.34. Draw both bilboards with appropriate colors and transformations
+	// Draw both bilboards with appropriate colors and transformations
+	XMFLOAT4X4 bilboardMtx;
 
-	//TODO : 1.35. Restore rendering state to it's original values
+	m_cbSurfaceColor.Update(m_device.context(), GREEN_COLOR);
+	XMStoreFloat4x4(&bilboardMtx,
+		XMMatrixScaling(BILBOARD_SCALE, BILBOARD_SCALE, BILBOARD_SCALE) *
+		XMMatrixTranslation(GREEN_LIGHT_POS.x, GREEN_LIGHT_POS.y, GREEN_LIGHT_POS.z));
+	m_cbWorld.Update(m_device.context(), bilboardMtx);
+	m_bilboard.Render(m_device.context());
 
+	m_cbSurfaceColor.Update(m_device.context(), BLUE_COLOR);
+	XMStoreFloat4x4(&bilboardMtx,
+		XMMatrixScaling(BILBOARD_SCALE, BILBOARD_SCALE, BILBOARD_SCALE) *
+		XMMatrixTranslation(BLUE_LIGHT_POS.x, BLUE_LIGHT_POS.y, BLUE_LIGHT_POS.z));
+	m_cbWorld.Update(m_device.context(), bilboardMtx);
+	m_bilboard.Render(m_device.context());
+
+	// Restore rendering state to it's original values
+	m_cbSurfaceColor.Update(m_device.context(), WHITE_COLOR);
+	m_device.context()->OMSetBlendState(nullptr, nullptr, BS_MASK);
+	SetShaders();
 }
 
 void ButterflyDemo::DrawMirroredWorld(unsigned int i)
@@ -444,7 +467,9 @@ void ButterflyDemo::DrawMirroredWorld(unsigned int i)
 	// Restore rasterizer state to it's original value
 	m_device.context()->RSSetState(nullptr);
 
-	//TODO : 1.36. Draw mirrored bilboards - they need to be drawn after restoring rasterizer state, but with mirrored view matrix
+	// Draw mirrored bilboards - they need to be drawn after restoring rasterizer state, 
+	// but with mirrored view matrix
+	DrawBilboards();
 
 	// Restore view matrix to its original value
 	XMFLOAT4X4 old_view;
