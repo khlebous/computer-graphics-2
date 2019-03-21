@@ -16,16 +16,21 @@ const float ButterflyDemo::MOEBIUS_R = 1.0f;
 const float ButterflyDemo::MOEBIUS_W = 0.1f;
 const unsigned int ButterflyDemo::MOEBIUS_N = 128;
 
-const float ButterflyDemo::LAP_TIME = 10.0f;
+const float ButterflyDemo::LAP_TIME = 20.0f;
 const float ButterflyDemo::FLAP_TIME = 2.0f;
 const float ButterflyDemo::WING_W = 0.15f;
 const float ButterflyDemo::WING_H = 0.1f;
 const float ButterflyDemo::WING_MAX_A = 8.0f * XM_PIDIV2 / 9.0f; //80 degrees
+const float ButterflyDemo::BILBOARD_SCALE = 0.3f;
 
 const unsigned int ButterflyDemo::BS_MASK = 0xffffffff;
 
 const XMFLOAT4 ButterflyDemo::GREEN_LIGHT_POS = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 const XMFLOAT4 ButterflyDemo::BLUE_LIGHT_POS = XMFLOAT4(-1.0f, -1.0f, -1.0f, 1.0f);
+const XMFLOAT4 ButterflyDemo::GREEN_COLOR = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+const XMFLOAT4 ButterflyDemo::BLUE_COLOR = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+const XMFLOAT4 ButterflyDemo::WHITE_COLOR = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
 const XMFLOAT4 ButterflyDemo::COLORS[] = {
 	XMFLOAT4(253.0f / 255.0f, 198.0f / 255.0f, 137.0f / 255.0f, 100.0f / 255.0f),
 	XMFLOAT4(255.0f / 255.0f, 247.0f / 255.0f, 153.0f / 255.0f, 100.0f / 255.0f),
@@ -45,10 +50,10 @@ const XMFLOAT4 ButterflyDemo::COLORS[] = {
 #pragma region Initalization
 ButterflyDemo::ButterflyDemo(HINSTANCE hInstance)
 	: Gk2ExampleBase(hInstance, 1280, 720, L"Motyl"),
-	  m_cbWorld(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
-	  m_cbView(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()),
-	  m_cbLighting(m_device.CreateConstantBuffer<Lighting>()),
-	  m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>())
+	m_cbWorld(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
+	m_cbView(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()),
+	m_cbLighting(m_device.CreateConstantBuffer<Lighting>()),
+	m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>())
 
 {
 	//Projection matrix
@@ -109,58 +114,150 @@ void ButterflyDemo::CreateRenderStates()
 //Setup render states used in various stages of the scene rendering
 {
 	DepthStencilDescription dssDesc;
-	//TODO : 1.17. Setup depth stancil state for writing
 
-	m_dssWrite = m_device.CreateDepthStencilState(dssDesc);
+	// Setup depth stancil state for writing
+	m_dssWrite = m_device.CreateDepthStencilState(dssDesc.StencilWriteDescription());
 
-	//TODO : 1.18. Setup depth stencil state for testing
-	
-	m_dssTest = m_device.CreateDepthStencilState(dssDesc);
+	// Setup depth stencil state for testing
+	m_dssTest = m_device.CreateDepthStencilState(dssDesc.StencilTestDescription());
 
-	//TODO : 1.10. Setup rasterizer state with ccw front faces
-
-	m_rsCCW = m_device.CreateRasterizerState(RasterizerDescription());
+	// Setup rasterizer state with ccw front faces
+	m_rsCCW = m_device.CreateRasterizerState(RasterizerDescription(true));
 
 	BlendDescription bsDesc;
-	//TODO : 1.23. Setup alpha blending state
 
-	m_bsAlpha = m_device.CreateBlendState(bsDesc);
+	// Setup alpha blending state
+	m_bsAlpha = m_device.CreateBlendState(bsDesc.AlphaBlendDescription());
 
-	//TODO : 1.30. Setup additive blending state
-
-	m_bsAdd = m_device.CreateBlendState(bsDesc);
+	// Setup additive blending state
+	m_bsAdd = m_device.CreateBlendState(bsDesc.AdditiveBlendDescription());
 }
 
 void ButterflyDemo::CreateDodecahadronMtx()
 //Compute dodecahedronMtx and mirrorMtx
 {
-	//TODO : 1.01. calculate m_dodecahedronMtx matrices
+	XMMATRIX mtx;
 
-	//TODO : 1.09. calcuate m_mirrorMtx matrices
+	XMStoreFloat4x4(&m_dodecahedronMtx[0],
+		XMMatrixTranslation(0.0f, 0.0f, DODECAHEDRON_H / 2));
+
+	mtx = XMLoadFloat4x4(&m_dodecahedronMtx[0]);
+	XMStoreFloat4x4(&m_dodecahedronMtx[1], mtx *
+		XMMatrixRotationZ(XM_PI) *
+		XMMatrixRotationY(DODECAHEDRON_A - XM_PI));
+
+	mtx = XMLoadFloat4x4(&m_dodecahedronMtx[1]);
+	for (size_t i = 1; i <= 5; i++)
+	{
+		XMStoreFloat4x4(&m_dodecahedronMtx[i + 1], mtx *
+			XMMatrixRotationZ(i * XM_2PI / 5.0f));
+	}
+
+	for (size_t i = 0; i < 6; i++)
+	{
+		mtx = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
+		XMStoreFloat4x4(&m_dodecahedronMtx[i + 6], mtx *
+			XMMatrixRotationY(XM_PI));
+	}
+
+	for (size_t i = 0; i < 12; i++)
+	{
+		mtx = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
+		XMStoreFloat4x4(&m_dodecahedronMtx[i], mtx *
+			XMMatrixScaling(2.0f, 2.0f, 2.0f));
+	}
+
+	XMMATRIX m_scale = XMMatrixScaling(1.0f, 1.0f, -1.0f);
+	for (size_t i = 0; i < 12; i++)
+	{
+		XMMATRIX m = XMLoadFloat4x4(&m_dodecahedronMtx[i]);
+		XMMATRIX m_inverse = XMMatrixInverse(nullptr, m);
+		XMStoreFloat4x4(&m_mirrorMtx[i], m_inverse * m_scale * m);
+	}
 }
 
 XMFLOAT3 ButterflyDemo::MoebiusStripPos(float t, float s)
-//TODO : 1.04. Compute the position of point on the Moebius strip for parameters t and s
 {
-	return {};
+	return XMFLOAT3(
+		XMScalarCos(t) * (MOEBIUS_R + MOEBIUS_W * s * XMScalarCos(0.5f * t)),
+		XMScalarSin(t) * (MOEBIUS_R + MOEBIUS_W * s * XMScalarCos(0.5f * t)),
+		MOEBIUS_W * s * XMScalarSin(0.5f * t)
+	);
 }
 
 XMVECTOR ButterflyDemo::MoebiusStripDs(float t, float s)
-//TODO : 1.05. Return the s-derivative of point on the Moebius strip for parameters t and s
 {
-	return {};
+	return XMVector3Normalize(XMVectorSet(
+		XMScalarCos(0.5f * t)*XMScalarCos(t),
+		XMScalarCos(0.5f * t)*XMScalarSin(t),
+		XMScalarSin(0.5f * t),
+		0
+	));
 }
 
 XMVECTOR ButterflyDemo::MoebiusStripDt(float t, float s)
-//TODO : 1.06. Compute the t-derivative of point on the Moebius strip for parameters t and s
 {
-	return {};
+	return XMVector3Normalize(XMVectorSet(-MOEBIUS_R * XMScalarSin(t) -
+		0.5f * s * MOEBIUS_W * XMScalarSin(0.5f) * XMScalarCos(t) -
+		MOEBIUS_W * s * XMScalarCos(0.5 * t) * XMScalarSin(t),
+
+		MOEBIUS_R * XMScalarCos(t) -
+		0.5f * s * MOEBIUS_W * XMScalarSin(0.5f) * XMScalarSin(t) +
+		MOEBIUS_W * s * XMScalarCos(0.5 * t) * XMScalarCos(t),
+
+		0.5f * s * MOEBIUS_W * XMScalarCos(t),
+
+		0
+	));
 }
 
 void ButterflyDemo::CreateMoebuisStrip()
-//TODO : 1.07. Create Moebius strip mesh
 {
+	vector<VertexPositionNormal> vertices = vector<VertexPositionNormal>();
+	vector<unsigned short> indices = vector<unsigned short>();
 
+	VertexPositionNormal vpn;
+	for (size_t i = 0; i < MOEBIUS_N; i++)
+	{
+		float angle = i * 4 * XM_PI / MOEBIUS_N;
+
+		vpn.position = MoebiusStripPos(angle, -1);
+		XMStoreFloat3(&vpn.normal,
+			XMVector3Cross(MoebiusStripDt(angle, -1), MoebiusStripDs(angle, -1)));
+		vertices.push_back(vpn);
+
+		vpn.position = MoebiusStripPos(angle, 0);
+		XMStoreFloat3(&vpn.normal,
+			XMVector3Cross(MoebiusStripDt(angle, 0), MoebiusStripDs(angle, 0)));
+		vertices.push_back(vpn);
+
+		vpn.position = MoebiusStripPos(angle, 1);
+		XMStoreFloat3(&vpn.normal,
+			XMVector3Cross(MoebiusStripDt(angle, 1), MoebiusStripDs(angle, 1)));
+		vertices.push_back(vpn);
+	}
+
+	int MOEBIUS_3N = MOEBIUS_N * 3;
+	for (size_t i = 0; i < MOEBIUS_3N; i += 3)
+	{
+		indices.push_back(i);
+		indices.push_back((i + 4) % MOEBIUS_3N);
+		indices.push_back(i + 1);
+
+		indices.push_back(i);
+		indices.push_back((i + 5) % MOEBIUS_3N);
+		indices.push_back(i + 2);
+
+		indices.push_back(i);
+		indices.push_back((i + 3) % MOEBIUS_3N);
+		indices.push_back((i + 4) % MOEBIUS_3N);
+
+		indices.push_back(i + 1);
+		indices.push_back((i + 4) % MOEBIUS_3N);
+		indices.push_back((i + 5) % MOEBIUS_3N);
+	}
+
+	m_moebius = m_device.CreateMesh(indices, vertices);
 }
 #pragma endregion
 
@@ -188,7 +285,6 @@ void ButterflyDemo::UpdateCameraCB(DirectX::XMFLOAT4X4 cameraMtx)
 }
 
 void ButterflyDemo::UpdateButterfly(float dtime)
-//TODO : 1.26. Compute the matrices for butterfly wings. Position on the strip is determined based on time
 {
 	static float lap = 0.0f;
 	lap += dtime;
@@ -203,6 +299,26 @@ void ButterflyDemo::UpdateButterfly(float dtime)
 		a = 2 * WING_MAX_A - a;
 	//Write the rest of code here
 
+	XMVECTOR pt = MoebiusStripDt(t, 0);
+	XMVECTOR ps = MoebiusStripDs(t, 0);
+	XMVECTOR pt_cross_ps = XMVector3Cross(ps, pt);
+
+	XMFLOAT3 pos = MoebiusStripPos(t, 0);
+	XMFLOAT4 pos4(pos.x, pos.y, pos.z, 1.0f);
+	XMVECTOR p = XMLoadFloat4(&pos4);
+	XMMATRIX moebiusMtx;
+	moebiusMtx.r[0] = pt;
+	moebiusMtx.r[1] = pt_cross_ps;
+	moebiusMtx.r[2] = ps;
+	moebiusMtx.r[3] = p;
+
+	XMMATRIX common_model_mtx = XMMatrixTranslation(0.0f, 1.0f, 0.0f) *
+		XMMatrixScaling(WING_W, WING_H, 1);
+
+	XMStoreFloat4x4(&m_wingMtx[1], common_model_mtx * XMMatrixRotationX(-a) *
+		moebiusMtx);
+	XMStoreFloat4x4(&m_wingMtx[0], common_model_mtx * XMMatrixRotationX(a) *
+		moebiusMtx);
 }
 #pragma endregion
 
@@ -224,13 +340,12 @@ void ButterflyDemo::SetBilboardShaders()
 }
 
 void ButterflyDemo::Set1Light()
-//Setup one positional light at the camera
 {
 	Lighting l{
 		/*.ambientColor = */ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		/*.surface = */ XMFLOAT4(0.2f, 0.8f, 0.8f, 200.0f),
 		/*.lights =*/ {
-			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }
+			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ WHITE_COLOR }
 			//other 2 lights set to 0
 		}
 	};
@@ -238,21 +353,16 @@ void ButterflyDemo::Set1Light()
 }
 
 void ButterflyDemo::Set3Lights()
-//Setup one white positional light at the camera
-//TODO : 1.28. Setup two additional positional lights, green and blue.
 {
 	Lighting l{
 		/*.ambientColor = */ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		/*.surface = */ XMFLOAT4(0.2f, 0.8f, 0.8f, 200.0f),
 		/*.lights =*/{
-			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) }
-			//Write the rest of the code here
-
+			{ /*.position =*/ m_camera.getCameraPosition(), /*.color =*/ WHITE_COLOR },
+			{ /*.position =*/ GREEN_LIGHT_POS, /*.color =*/ GREEN_COLOR },
+			{ /*.position =*/ BLUE_LIGHT_POS, /*.color =*/ BLUE_COLOR }
 		}
 	};
-
-	//comment the following line when structure is filled
-	ZeroMemory(&l.lights[1], sizeof(Light) * 2);
 
 	m_cbLighting.Update(m_device.context(), l);
 }
@@ -270,56 +380,104 @@ void ButterflyDemo::DrawBox()
 void ButterflyDemo::DrawDodecahedron(bool colors)
 //Draw dodecahedron. If color is true, use render faces with coresponding colors. Otherwise render using white color
 {
-	//TODO : 1.02. Draw all dodecahedron sides with colors - ignore function parameter for now
-
-	//TODO : 1.11. Modify function so if colors parameter is set to false, all faces are drawn white instead
-
+	XMFLOAT4 white_color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	for (size_t i = 0; i < 12; i++)
+	{
+		m_cbSurfaceColor.Update(m_device.context(), colors ? COLORS[i] : white_color);
+		m_cbWorld.Update(m_device.context(), m_dodecahedronMtx[i]);
+		m_pentagon.Render(m_device.context());
+	}
 }
 
 void ButterflyDemo::DrawMoebiusStrip()
-//TODO : 1.08. Draw the Moebius strip mesh
 {
-
+	XMFLOAT4X4 worldMtx;
+	XMStoreFloat4x4(&worldMtx, XMMatrixIdentity());
+	m_cbWorld.Update(m_device.context(), worldMtx);
+	m_moebius.Render(m_device.context());
 }
 
 void ButterflyDemo::DrawButterfly()
-//TODO : 1.27. Draw the butterfly
 {
-
+	for (size_t i = 0; i < 2; i++)
+	{
+		m_cbWorld.Update(m_device.context(), m_wingMtx[i]);
+		m_wing.Render(m_device.context());
+	}
 }
 
 void ButterflyDemo::DrawBilboards()
 //Setup bilboards rendering and draw them
 {
-	//TODO : 1.33. Setup shaders and blend state
+	// Setup shaders and blend state
+	SetBilboardShaders();
+	m_device.context()->OMSetBlendState(m_bsAdd.get(), nullptr, BS_MASK);
 
-	//TODO : 1.34. Draw both bilboards with appropriate colors and transformations
+	// Draw both bilboards with appropriate colors and transformations
+	XMFLOAT4X4 bilboardMtx;
 
-	//TODO : 1.35. Restore rendering state to it's original values
+	m_cbSurfaceColor.Update(m_device.context(), GREEN_COLOR);
+	XMStoreFloat4x4(&bilboardMtx,
+		XMMatrixScaling(BILBOARD_SCALE, BILBOARD_SCALE, BILBOARD_SCALE) *
+		XMMatrixTranslation(GREEN_LIGHT_POS.x, GREEN_LIGHT_POS.y, GREEN_LIGHT_POS.z));
+	m_cbWorld.Update(m_device.context(), bilboardMtx);
+	m_bilboard.Render(m_device.context());
 
+	m_cbSurfaceColor.Update(m_device.context(), BLUE_COLOR);
+	XMStoreFloat4x4(&bilboardMtx,
+		XMMatrixScaling(BILBOARD_SCALE, BILBOARD_SCALE, BILBOARD_SCALE) *
+		XMMatrixTranslation(BLUE_LIGHT_POS.x, BLUE_LIGHT_POS.y, BLUE_LIGHT_POS.z));
+	m_cbWorld.Update(m_device.context(), bilboardMtx);
+	m_bilboard.Render(m_device.context());
+
+	// Restore rendering state to it's original values
+	m_cbSurfaceColor.Update(m_device.context(), WHITE_COLOR);
+	m_device.context()->OMSetBlendState(nullptr, nullptr, BS_MASK);
+	SetShaders();
 }
 
 void ButterflyDemo::DrawMirroredWorld(unsigned int i)
 //Draw the mirrored scene reflected in the i-th dodecahedron face
 {
-	//TODO : 1.19. Setup render state for writing to the stencil buffer
+	// Setup render state for writing to the stencil buffer
+	m_device.context()->OMSetDepthStencilState(m_dssWrite.get(), i + 1);
 
-	//TODO : 1.20. Draw the i-th face
+	// Draw the i-th face
+	m_cbWorld.Update(m_device.context(), m_dodecahedronMtx[i]);
+	m_pentagon.Render(m_device.context());
 
-	//TODO : 1.21. Setup depth stencil state for rendering mirrored world
+	// Setup depth stencil state for rendering mirrored world
+	m_device.context()->OMSetDepthStencilState(m_dssTest.get(), i + 1);
 
-	//TODO : 1.12. Setup rasterizer state and view matrix for rendering the mirrored world
+	// Setup rasterizer state and view matrix for rendering the mirrored world
+	m_device.context()->RSSetState(m_rsCCW.get());
 
-	//TODO : 1.13. Draw objects of the mirrored scene - dodecahedron should be drawn with only one light and no colors and without blending
+	// Draw objects of the mirrored scene - dodecahedron should be drawn with only one light
+	// and no colors and without blending
+	XMMATRIX m_view = m_camera.getViewMatrix();
+	XMFLOAT4X4 new_view;
+	XMStoreFloat4x4(&new_view, XMLoadFloat4x4(&m_mirrorMtx[i]) * m_view);
+	UpdateCameraCB(new_view);
+	Set3Lights();
+	DrawMoebiusStrip();
+	DrawButterfly();
+	Set1Light();
+	DrawDodecahedron(false);
 
-	//TODO : 1.14. Restore rasterizer state to it's original value
+	// Restore rasterizer state to it's original value
+	m_device.context()->RSSetState(nullptr);
 
-	//TODO : 1.36. Draw mirrored bilboards - they need to be drawn after restoring rasterizer state, but with mirrored view matrix
+	// Draw mirrored bilboards - they need to be drawn after restoring rasterizer state, 
+	// but with mirrored view matrix
+	DrawBilboards();
 
-	//TODO : 1.15. Restore view matrix to its original value
+	// Restore view matrix to its original value
+	XMFLOAT4X4 old_view;
+	XMStoreFloat4x4(&old_view, m_view);
+	UpdateCameraCB(old_view);
 
-	//TODO : 1.22. Restore depth stencil state to it's original value
-
+	// Restore depth stencil state to it's original value
+	m_device.context()->OMSetDepthStencilState(nullptr, 0);
 }
 
 void ButterflyDemo::Render()
@@ -333,16 +491,13 @@ void ButterflyDemo::Render()
 	//render dodecahedron with one light and alpha blending
 	m_device.context()->OMSetBlendState(m_bsAlpha.get(), nullptr, BS_MASK);
 	Set1Light();
-	//TODO : 1.16. Comment the following line for now
 	DrawDodecahedron(true);
-	//TODO : 1.24. Uncomment the above line again
 	m_device.context()->OMSetBlendState(nullptr, nullptr, BS_MASK);
 
 	//render the rest of the scene with all lights
 	Set3Lights();
 	m_cbSurfaceColor.Update(m_device.context(), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	//TODO : 1.03. [optional] Comment the following line
-	DrawBox();
+	//DrawBox();
 	DrawMoebiusStrip();
 	DrawButterfly();
 	DrawBilboards();

@@ -62,6 +62,8 @@ namespace mini::gk2
 		//maximum angle between wings
 		static const float WING_MAX_A;
 
+		static const float BILBOARD_SCALE;
+
 		//Various D3D constants
 		static const unsigned int BS_MASK;
 
@@ -73,6 +75,9 @@ namespace mini::gk2
 		//Static light positions
 		static const DirectX::XMFLOAT4 GREEN_LIGHT_POS;
 		static const DirectX::XMFLOAT4 BLUE_LIGHT_POS;
+		static const DirectX::XMFLOAT4 GREEN_COLOR;
+		static const DirectX::XMFLOAT4 BLUE_COLOR;
+		static const DirectX::XMFLOAT4 WHITE_COLOR;
 #pragma endregion
 
 #pragma region D3D Resources
