@@ -37,11 +37,11 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	SamplerDescription sd;
 	sd.AddressU = sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	m_samplerWrap = m_device.CreateSamplerState(sd);
-	// TODO : 2.07 Initialize second sampler state
+	sd.AddressU = sd.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	m_samplerBorder = m_device.CreateSamplerState(sd);
 
 	// TODO : 2.10 Moddify MipLODBias field for the second sampler
 
-	m_samplerBorder = m_device.CreateSamplerState(sd);
 
 	//Wood texture
 	constexpr auto woodTexWidth = 64U;
@@ -153,19 +153,27 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 
 	auto vsCode = m_device.LoadByteCode(L"phongVS.cso");
 	auto psCode = m_device.LoadByteCode(L"phongPS.cso");
-	m_phongEffect = PhongEffect(m_device.CreateVertexShader(vsCode), m_device.CreatePixelShader(psCode),
+	m_phongEffect = PhongEffect(m_device.CreateVertexShader(vsCode), 
+		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbLightPos, m_cbSurfaceColor);
 	m_inputlayout = m_device.CreateInputLayout(VertexPositionNormal::Layout, vsCode);
 
 	vsCode = m_device.LoadByteCode(L"texturedVS.cso");
 	psCode = m_device.LoadByteCode(L"texturedPS.cso");
-	m_texturedEffect = TexturedEffect(m_device.CreateVertexShader(vsCode), m_device.CreatePixelShader(psCode),
+	m_texturedEffect = TexturedEffect(m_device.CreateVertexShader(vsCode), 
+		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbTex1Mtx, m_samplerWrap, m_wallTexture);
 	vsCode = m_device.LoadByteCode(L"colorTexVS.cso");
 	psCode = m_device.LoadByteCode(L"colorTexPS.cso");
-	m_coloredTextureEffect = ColoredTextureEffect(m_device.CreateVertexShader(vsCode), m_device.CreatePixelShader(psCode),
+	m_coloredTextureEffect = ColoredTextureEffect(m_device.CreateVertexShader(vsCode), 
+		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbTex1Mtx, m_cbSurfaceColor, m_samplerWrap, m_perlinTexture);
-	// TODO : 2.04 initialize MultiTextureEffect field
+	vsCode = m_device.LoadByteCode(L"multiTexVS.cso");
+	psCode = m_device.LoadByteCode(L"multiTexPS.cso");
+	m_multiTexturedEffect = MultiTexturedEffect(m_device.CreateVertexShader(vsCode), 
+		m_device.CreatePixelShader(psCode),
+		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbTex1Mtx, m_cbTex2Mtx,
+		m_samplerBorder, m_wallTexture, m_posterTexture);
 
 	vsCode = m_device.LoadByteCode(L"envMapperVS.cso");
 	psCode = m_device.LoadByteCode(L"envMapperPS.cso");
@@ -253,9 +261,7 @@ void RoomDemo::DrawWalls()
 	SetSurfaceColor(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	//draw back wall
-	// TODO : 2.05 Replace with MultiTextureEffect
-	m_phongEffect.Begin(m_device.context());
-
+	m_multiTexturedEffect.Begin(m_device.context());
 	DrawMesh(m_wall, m_wallsMtx[0]);
 
 	//draw remainting walls

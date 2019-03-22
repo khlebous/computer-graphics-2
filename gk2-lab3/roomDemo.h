@@ -4,6 +4,7 @@
 #include "mesh.h"
 #include "PhongEffect.h"
 #include "TexturedEffect.h"
+#include "MultiTexturedEffect.h"
 #include "ColorTextureEffect.h"
 #include "particleSystem.h"
 #include "environmentMapper.h"
@@ -54,7 +55,6 @@ namespace mini::gk2
 			m_chairMtx, m_tableLegsMtx[4], m_tableTopMtx, m_tableSideMtx, m_monitorMtx;
 
 		dx_ptr<ID3D11SamplerState> m_samplerWrap;
-		// TODO : 2.06 Add second sampler state field
 		dx_ptr<ID3D11SamplerState> m_samplerBorder;
 
 		dx_ptr<ID3D11ShaderResourceView> m_wallTexture;
@@ -71,7 +71,7 @@ namespace mini::gk2
 		PhongEffect m_phongEffect;
 		TexturedEffect m_texturedEffect;
 		ColoredTextureEffect m_coloredTextureEffect;
-		// TODO : 2.03 Create field for MultiTexturedEffect
+		MultiTexturedEffect m_multiTexturedEffect;
 
 		EnvironmentMapper m_envMapper;
 
