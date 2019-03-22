@@ -38,10 +38,8 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	sd.AddressU = sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	m_samplerWrap = m_device.CreateSamplerState(sd);
 	sd.AddressU = sd.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	// sd.MipLODBias = 2.0f;
 	m_samplerBorder = m_device.CreateSamplerState(sd);
-
-	// TODO : 2.10 Moddify MipLODBias field for the second sampler
-
 
 	//Wood texture
 	constexpr auto woodTexWidth = 64U;
@@ -135,10 +133,13 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	XMFLOAT4X4 tempMtx;
 	XMStoreFloat4x4(&tempMtx, XMMatrixScaling(0.25f, 0.25f, 1.0f) * XMMatrixTranslation(0.5f, 0.5f, 0.0f));
 	m_cbTex1Mtx.Update(m_device.context(), tempMtx);
-	// TODO : 2.09 Calculate correct transformation matrix for the poster texture
-
-	XMStoreFloat4x4(&tempMtx, XMMatrixIdentity());
-
+	
+	XMStoreFloat4x4(&tempMtx, 
+		XMMatrixTranslation(0.5f, 0.0f, 0.0f) *
+		XMMatrixRotationZ(XM_PI / 18.0f) *
+		XMMatrixScaling(1.0f, -0.75f, 1.0f) *
+		XMMatrixTranslation(0.5f, 0.5f, 0.0f) *
+		XMMatrixIdentity());
 	m_cbTex2Mtx.Update(m_device.context(), tempMtx);
 
 	//Render states
