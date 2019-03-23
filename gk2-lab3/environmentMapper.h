@@ -31,23 +31,45 @@ namespace mini
 
 			EnvironmentMapper() = default;
 
-			EnvironmentMapper(const DxDevice& device,  dx_ptr<ID3D11VertexShader>&& vs, dx_ptr<ID3D11PixelShader>&& ps,
-				const ConstantBuffer<DirectX::XMFLOAT4X4>& cbWorld, const ConstantBuffer<DirectX::XMFLOAT4X4, 2>& cbView,
-				const ConstantBuffer<DirectX::XMFLOAT4X4>& cbProj, const ConstantBuffer<DirectX::XMFLOAT4>& cbSurfaceColor,
-				const dx_ptr<ID3D11SamplerState>& sampler, float nearPlane, float farPlane, DirectX::XMFLOAT3 position);
+			EnvironmentMapper(const DxDevice& device,
+				dx_ptr<ID3D11VertexShader>&& vs,
+				dx_ptr<ID3D11PixelShader>&& ps,
+				const ConstantBuffer<DirectX::XMFLOAT4X4>& cbWorld,
+				const ConstantBuffer<DirectX::XMFLOAT4X4, 2>& cbView,
+				const ConstantBuffer<DirectX::XMFLOAT4X4>& cbProj,
+				const ConstantBuffer<DirectX::XMFLOAT4>& cbSurfaceColor,
+				const dx_ptr<ID3D11SamplerState>& sampler,
+				float nearPlane, float farPlane, DirectX::XMFLOAT3 position);
 
 			void Begin(const dx_ptr<ID3D11DeviceContext>& context) const override;
 
 
-			void SetWorldMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4>& buffer) { SetVSConstantBuffer(WorldMtxSlot, buffer); }
-			void SetViewMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4, 2>& buffer) { SetVSConstantBuffer(ViewMtxSlot, buffer); }
-			void SetProjMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4>& buffer) { SetVSConstantBuffer(ProjMtxSlot, buffer); }
+			void SetWorldMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4>& buffer)
+			{
+				SetVSConstantBuffer(WorldMtxSlot, buffer);
+			}
+			void SetViewMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4, 2>& buffer)
+			{
+				SetVSConstantBuffer(ViewMtxSlot, buffer);
+			}
+			void SetProjMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4>& buffer)
+			{
+				SetVSConstantBuffer(ProjMtxSlot, buffer);
+			}
 
-			void SetTextureSampler(const dx_ptr<ID3D11SamplerState>& sampler) { SetPSSampler(TextureSamplerSlot, sampler); }
-			void SetSurfaceColorBuffer(const ConstantBuffer<DirectX::XMFLOAT4, 2>& buffer) { SetPSConstantBuffer(SurfaceColorSlot, buffer); }
+			void SetTextureSampler(const dx_ptr<ID3D11SamplerState>& sampler)
+			{
+				SetPSSampler(TextureSamplerSlot, sampler);
+			}
+			void SetSurfaceColorBuffer(const ConstantBuffer<DirectX::XMFLOAT4, 2>& buffer)
+			{
+				SetPSConstantBuffer(SurfaceColorSlot, buffer);
+			}
 
-			void BeginFace(const dx_ptr<ID3D11DeviceContext>& context, ConstantBuffer<DirectX::XMFLOAT4X4, 2>& cbView,
-				ConstantBuffer<DirectX::XMFLOAT4X4>& cbProj, D3D11_TEXTURECUBE_FACE face);
+			void BeginFace(const dx_ptr<ID3D11DeviceContext>& context,
+				ConstantBuffer<DirectX::XMFLOAT4X4, 2>& cbView,
+				ConstantBuffer<DirectX::XMFLOAT4X4>& cbProj,
+				D3D11_TEXTURECUBE_FACE face);
 			void EndFace(const dx_ptr<ID3D11DeviceContext>& context);
 
 		private:

@@ -13,7 +13,7 @@ const XMFLOAT4 RoomDemo::TABLE_POS{ 0.5f, -0.96f, 0.5f, 1.0f };
 const XMFLOAT4 RoomDemo::LIGHT_POS[2] = { {1.0f, 1.0f, 1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f} };
 
 RoomDemo::RoomDemo(HINSTANCE appInstance)
-	: Gk2ExampleBase(appInstance, 1280, 720, L"Pokój"), 
+	: Gk2ExampleBase(appInstance, 1280, 720, L"Pokój"),
 	//Constant Buffers
 	m_cbWorldMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
 	m_cbProjMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()), m_cbTex1Mtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
@@ -45,8 +45,8 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	constexpr auto woodTexWidth = 64U;
 	constexpr auto woodTexHeight = 64U;
 	constexpr auto woodTexBpp = 4U;
-	constexpr auto woodTexStride = woodTexWidth*woodTexBpp;
-	constexpr auto woodTexSize = woodTexStride*woodTexHeight;
+	constexpr auto woodTexStride = woodTexWidth * woodTexBpp;
+	constexpr auto woodTexSize = woodTexStride * woodTexHeight;
 
 	auto texDesc = Texture2DDescription(woodTexWidth, woodTexHeight);
 	texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
@@ -112,10 +112,10 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	XMStoreFloat4x4(&m_wallsMtx[5], temp * XMMatrixRotationX(-XM_PIDIV2));
 	XMStoreFloat4x4(&m_teapotMtx, XMMatrixTranslation(0.0f, -2.3f, 0.f) * XMMatrixScaling(0.1f, 0.1f, 0.1f) *
 		XMMatrixRotationY(-XM_PIDIV2) * XMMatrixTranslation(-1.3f, -0.74f, -0.6f));
-	
+
 	XMStoreFloat4x4(&m_sphereMtx, XMMatrixRotationY(-XM_PIDIV2) * XMMatrixTranslation(-1.3f, -0.74f, -0.6f));
 	XMStoreFloat4x4(&m_boxMtx, XMMatrixTranslation(-1.4f, -1.46f, -0.6f));
-	XMStoreFloat4x4(&m_chairMtx, XMMatrixRotationY(XM_PI + XM_PI / 9 ) *
+	XMStoreFloat4x4(&m_chairMtx, XMMatrixRotationY(XM_PI + XM_PI / 9) *
 		XMMatrixTranslation(-0.1f, -1.06f, -1.3f));
 	XMStoreFloat4x4(&m_monitorMtx, XMMatrixRotationY(XM_PIDIV4) *
 		XMMatrixTranslation(TABLE_POS.x, TABLE_POS.y + 0.42f, TABLE_POS.z));
@@ -133,8 +133,8 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	XMFLOAT4X4 tempMtx;
 	XMStoreFloat4x4(&tempMtx, XMMatrixScaling(0.25f, 0.25f, 1.0f) * XMMatrixTranslation(0.5f, 0.5f, 0.0f));
 	m_cbTex1Mtx.Update(m_device.context(), tempMtx);
-	
-	XMStoreFloat4x4(&tempMtx, 
+
+	XMStoreFloat4x4(&tempMtx,
 		XMMatrixTranslation(0.5f, 0.0f, 0.0f) *
 		XMMatrixRotationZ(XM_PI / 18.0f) *
 		XMMatrixScaling(1.0f, -0.75f, 1.0f) *
@@ -154,24 +154,24 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 
 	auto vsCode = m_device.LoadByteCode(L"phongVS.cso");
 	auto psCode = m_device.LoadByteCode(L"phongPS.cso");
-	m_phongEffect = PhongEffect(m_device.CreateVertexShader(vsCode), 
+	m_phongEffect = PhongEffect(m_device.CreateVertexShader(vsCode),
 		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbLightPos, m_cbSurfaceColor);
 	m_inputlayout = m_device.CreateInputLayout(VertexPositionNormal::Layout, vsCode);
 
 	vsCode = m_device.LoadByteCode(L"texturedVS.cso");
 	psCode = m_device.LoadByteCode(L"texturedPS.cso");
-	m_texturedEffect = TexturedEffect(m_device.CreateVertexShader(vsCode), 
+	m_texturedEffect = TexturedEffect(m_device.CreateVertexShader(vsCode),
 		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbTex1Mtx, m_samplerWrap, m_wallTexture);
 	vsCode = m_device.LoadByteCode(L"colorTexVS.cso");
 	psCode = m_device.LoadByteCode(L"colorTexPS.cso");
-	m_coloredTextureEffect = ColoredTextureEffect(m_device.CreateVertexShader(vsCode), 
+	m_coloredTextureEffect = ColoredTextureEffect(m_device.CreateVertexShader(vsCode),
 		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbTex1Mtx, m_cbSurfaceColor, m_samplerWrap, m_perlinTexture);
 	vsCode = m_device.LoadByteCode(L"multiTexVS.cso");
 	psCode = m_device.LoadByteCode(L"multiTexPS.cso");
-	m_multiTexturedEffect = MultiTexturedEffect(m_device.CreateVertexShader(vsCode), 
+	m_multiTexturedEffect = MultiTexturedEffect(m_device.CreateVertexShader(vsCode),
 		m_device.CreatePixelShader(psCode),
 		m_cbWorldMtx, m_cbViewMtx, m_cbProjMtx, m_cbTex1Mtx, m_cbTex2Mtx,
 		m_samplerBorder, m_wallTexture, m_posterTexture);
@@ -203,7 +203,7 @@ void RoomDemo::UpdateLamp(float dt)
 	static auto time = 0.0f;
 	time += dt;
 	auto swing = 0.3f * XMScalarSin(XM_2PI*time / 8);
-	auto rot = XM_2PI*time / 20;
+	auto rot = XM_2PI * time / 20;
 	auto lamp = XMMatrixTranslation(0.0f, -0.4f, 0.0f) * XMMatrixRotationX(swing) * XMMatrixRotationY(rot) *
 		XMMatrixTranslation(0.0f, 2.0f, 0.0f);
 	XMStoreFloat4x4(&m_lampMtx, lamp);
@@ -274,12 +274,9 @@ void RoomDemo::DrawWalls()
 
 void RoomDemo::DrawTeapot()
 {
-	// TODO : 2.24 Comment the following line and begin m_envMapper effect instead
-	m_phongEffect.Begin(m_device.context());
+	m_envMapper.Begin(m_device.context());
 
-	SetSurfaceColor(XMFLOAT4(0.8f, 0.7f, 0.65f, 1.0f));
-
-	// TODO : 2.25 [optional] Comment the following line and uncomment the next to replace teapot with a sphere
+	// Comment the following line and uncomment the next to replace teapot with a sphere
 	DrawMesh(m_teapot, m_teapotMtx);
 	//DrawMesh(m_sphere, m_sphereMtx);
 
@@ -400,7 +397,18 @@ void RoomDemo::DrawScene()
 void RoomDemo::Render()
 {
 	Gk2ExampleBase::Render();
-	// TODO : 2.22 Render scene to each envionment cube map face
+
+	// Render scene to each envionment cube map face
+	for (size_t i = 0; i < 6; i++)
+	{
+		m_envMapper.BeginFace(m_device.context(), m_cbViewMtx, m_cbProjMtx,
+			static_cast<D3D11_TEXTURECUBE_FACE>(i));
+		//getDefaultRenderTarget().Begin(m_device.context());
+		/*m_cbProjMtx.Update(m_device.context(), m_projMtx);
+		UpdateCameraCB();*/
+		DrawScene();
+		m_envMapper.EndFace(m_device.context());
+	}
 
 	getDefaultRenderTarget().Begin(m_device.context());
 	m_cbProjMtx.Update(m_device.context(), m_projMtx);
