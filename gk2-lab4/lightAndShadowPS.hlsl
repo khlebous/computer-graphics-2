@@ -35,6 +35,11 @@ static const float kd = 0.5, ks = 0.2f, m = 100.0f;
 float4 main(PSInput i) : SV_TARGET
 {
 	// TODO : 3.05 Calculate texture coordinates
+	float4 globalPos = mul(mapMatrix, float4(i.worldPos,1));
+	globalPos.x = globalPos.x / globalPos.w;
+	globalPos.y = globalPos.y / globalPos.w;
+	globalPos.z = globalPos.z / globalPos.w;
+	globalPos.w = 1;
 
 	float3 viewVec = normalize(i.viewVec);
 	float3 normal = normalize(i.norm);
@@ -42,12 +47,11 @@ float4 main(PSInput i) : SV_TARGET
 	float3 halfVec = normalize(viewVec + lightVec);
 	float3 color = surfaceColor.rgb * ambientColor;
 
+
 	// TODO : 3.06 Determine light color based on light map
-
 	// TODO : 3.08 Take into account the clipping plane when determining light color
-
 	// TODO : 3.16 Include shadow map in light color calculation
-	float4 lightColor = defLightColor;
+	float4 lightColor = max(lightMap.Sample(colorSampler, globalPos.xy), defLightColor);
 
 	color += lightColor.rgb * surfaceColor.xyz * kd * saturate(dot(normal, lightVec)); //diffuse color
 	float nh = dot(normal, halfVec);

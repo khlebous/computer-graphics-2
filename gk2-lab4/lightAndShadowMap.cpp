@@ -22,7 +22,15 @@ LightAndShadowMap::LightAndShadowMap(const DxDevice& device, const ConstantBuffe
 	SetPSShaderResource(0, lightMap);
 
 	SamplerDescription sd;
-	// TODO : 3.04 Create sampler with appropriate addressing (border) and filtering (bilinear) modes
+	// TODO : 3.04 Create sampler with appropriate addressing (border) and filtering 
+	// (bilinear) modes
+	sd.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	sd.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	sd.BorderColor[0] = 0;
+	sd.BorderColor[1] = 0;
+	sd.BorderColor[2] = 0;
+	sd.BorderColor[3] = 0;
+	sd.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 
 	SetPSSampler(0, device.CreateSamplerState(sd));
 

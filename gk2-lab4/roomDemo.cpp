@@ -201,7 +201,7 @@ void RoomDemo::Render()
 	UpdateCameraCB();
 
 	//TODO : 3.07 Replace with lightShadowEffect
-	m_phongEffect.Begin(m_device.context());
+	m_lightShadowMap.Begin(m_device.context());
 
 	DrawScene();
 
