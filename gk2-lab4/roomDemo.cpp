@@ -195,6 +195,11 @@ void RoomDemo::Render()
 	Gk2ExampleBase::Render();
 
 	// TODO : 3.15 Render objects and particles to the shadow map using a Phong Effect
+	m_lightShadowMap.BeginShadowRender(m_device.context(), m_cbViewMtx, m_cbProjMtx);
+	m_phongEffect.Begin(m_device.context());
+
+	DrawScene();
+	DrawParticles();
 
 	getDefaultRenderTarget().Begin(m_device.context());
 	m_cbProjMtx.Update(m_device.context(), m_projMtx);
