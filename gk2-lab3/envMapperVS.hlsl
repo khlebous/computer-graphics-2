@@ -39,9 +39,7 @@ PSInput main(VSInput i)
 	float4 cam_pos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f));
 	float4 vec_from_cam = o.pos - cam_pos;
 
-	float4 refl = reflect(vec_from_cam, new_norm);
-	o.tex = refl.xyz;
-
+	o.tex = reflect(vec_from_cam, new_norm).xyz;
 	o.pos = mul(viewMatrix, o.pos);
 	o.pos = mul(projMatrix, o.pos);
 	return o;

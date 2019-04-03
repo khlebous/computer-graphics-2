@@ -35,8 +35,8 @@ ParticleEffect::ParticleEffect(dx_ptr<ID3D11VertexShader>&& vs, dx_ptr<ID3D11Geo
 	const ConstantBuffer<DirectX::XMFLOAT4X4, 2> cbView, const ConstantBuffer<DirectX::XMFLOAT4X4>& cbProj,
 	const dx_ptr<ID3D11SamplerState>& sampler, dx_ptr<ID3D11ShaderResourceView>&& colorMap,
 	dx_ptr<ID3D11ShaderResourceView>&& opacityMap)
-	: StaticEffect(BasicEffect(move(vs), move(ps)), GeometryShaderComponent(move(gs)), VSConstantBuffers{cbView},
-		GSConstantBuffers{cbProj}, PSSamplers{sampler}, PSShaderResources{colorMap, opacityMap})
+	: StaticEffect(BasicEffect(move(vs), move(ps)), GeometryShaderComponent(move(gs)), VSConstantBuffers{ cbView },
+		GSConstantBuffers{ cbProj }, PSSamplers{ sampler }, PSShaderResources{ colorMap, opacityMap })
 {
 }
 
@@ -112,6 +112,12 @@ void ParticleSystem::AddNewParticle()
 	static const uniform_real_distribution<float> anglularVelDist(MIN_ANGLE_VEL, MAX_ANGLE_VEL);
 	Particle p;
 	// TODO : 2.26 Setup initial particle properties
+	p.Vertex.Age = 0;
+	p.Vertex.Size = PARTICLE_SIZE;
+	p.Vertex.Pos = m_emitterPos;
+	p.Vertex.Angle = 0;
+	p.Velocities.Velocity = RandomVelocity();
+	p.Velocities.AngularVelocity = anglularVelDist(m_random);
 
 	m_particles.push_back(p);
 }
@@ -119,14 +125,42 @@ void ParticleSystem::AddNewParticle()
 void ParticleSystem::UpdateParticle(Particle& p, float dt)
 {
 	// TODO : 2.26 Update particle properties
+	p.Vertex.Age += dt;
+	p.Vertex.Pos.x += p.Velocities.Velocity.x * dt;
+	p.Vertex.Pos.y += p.Velocities.Velocity.y * dt;
+	p.Vertex.Pos.z += p.Velocities.Velocity.z * dt;
+	p.Vertex.Angle += p.Velocities.AngularVelocity * dt;
+	p.Vertex.Size += PARTICLE_SCALE * PARTICLE_SIZE * dt;
 }
 
-void ParticleSystem::UpdateVertexBuffer(const dx_ptr<ID3D11DeviceContext>& context, DirectX::XMFLOAT4 cameraPosition)
+void ParticleSystem::UpdateVertexBuffer(const dx_ptr<ID3D11DeviceContext>& context, 
+	DirectX::XMFLOAT4 cameraPosition)
 {
 	XMFLOAT4 cameraTarget(0.0f, 0.0f, 0.0f, 1.0f);
 
 	vector<ParticleVertex> vertices(MAX_PARTICLES);
 	// TODO : 2.27 Copy particles to a vector and sort them
+	std::list<Particle>::iterator it;
+	size_t ind = 0;
+	for (it = m_particles.begin(); it != m_particles.end(); it++, ind++)
+		vertices[ind] = it->Vertex;
+
+	for (auto &p : m_particles)
+	std::sort(vertices.begin(), vertices.begin() + m_particlesCount, 
+		[&cameraPosition](const ParticleVertex & a, const ParticleVertex & b) -> bool
+		{
+			float x1 = a.Pos.x - cameraPosition.x;
+			float y1 = a.Pos.y - cameraPosition.y;
+			float z1 = a.Pos.z - cameraPosition.z;
+			float d1 = x1 * x1 + y1 * y1 + z1 * z1;
+
+			float x2 = b.Pos.x - cameraPosition.x;
+			float y2 = b.Pos.y - cameraPosition.y;
+			float z2 = b.Pos.z - cameraPosition.z;
+			float d2 = x2 * x2 + y2 * y2 + z2 * z2;
+
+			return  d1 > d2;
+		});
 
 	D3D11_MAPPED_SUBRESOURCE resource;
 	auto hr = context->Map(m_vertices.get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
