@@ -34,20 +34,33 @@ LightAndShadowMap::LightAndShadowMap(const DxDevice& device, const ConstantBuffe
 
 	SetPSSampler(0, device.CreateSamplerState(sd));
 
-	// TODO : 3.09 Create shadow texture with appropriate width, height, format, mip levels and bind flags
+	// TODO : 3.09 Create shadow texture with appropriate width, height, format, 
+	// mip levels and bind flags
 	Texture2DDescription td;
+	td.Width = TEXTURE_SIZE;
+	td.Height = TEXTURE_SIZE;
+	td.Format = DXGI_FORMAT_R32_TYPELESS;
+	td.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	td.MipLevels = 1;
 
-	dx_ptr<ID3D11Texture2D> shadowTexture;// = device.CreateTexture(td);
+	dx_ptr<ID3D11Texture2D> shadowTexture = device.CreateTexture(td);
 	
-	// TODO : 3.10 Create depth-stencil view for the shadow texture with appropriate format
+	// TODO : 3.10 Create depth-stencil view for the shadow texture with 
+	// appropriate format
 	DepthViewDescription dvd;
+	dvd.Format = DXGI_FORMAT_D32_FLOAT;
 
-	//m_shadowDepthBuffer = device.CreateDepthStencilView(shadowTexture, dvd);
+	m_shadowDepthBuffer = device.CreateDepthStencilView(shadowTexture, dvd);
 
-	// TODO : 3.11 Create shader resource view for the shadow texture with appropriate format, view dimensions, mip levels and most detailed mip level
+	// TODO : 3.11 Create shader resource view for the shadow texture with 
+	// appropriate format, view dimensions, mip levels and most detailed mip level
 	ShaderResourceViewDescription srvd;
+	srvd.Format = DXGI_FORMAT_R32_FLOAT;
+	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvd.Texture2D.MipLevels = 1;
+	srvd.Texture2D.MostDetailedMip = 0;
 
-	dx_ptr<ID3D11ShaderResourceView> shadowMap;// = device.CreateShaderResourceView(shadowTexture, srvd);
+	dx_ptr<ID3D11ShaderResourceView> shadowMap = device.CreateShaderResourceView(shadowTexture, srvd);
 	SetPSShaderResource(1, shadowMap);
 }
 
