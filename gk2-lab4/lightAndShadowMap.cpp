@@ -86,7 +86,7 @@ XMFLOAT4 LightAndShadowMap::UpdateLightPosition(const dx_ptr<ID3D11DeviceContext
 	// TODO : 3.02 Calculate map transform matrix
 	XMFLOAT4X4 texFloat4x4;
 	XMMATRIX textMtx = viewMtx * projMtx * XMMatrixScaling(0.5f, -0.5f, 1.0f)
-		* XMMatrixTranslation(0.5f, 0.5f, 0.0f);
+		* XMMatrixTranslation(0.5f, 0.5f, -0.00001f);
 
 	// TODO : 3.17 Modify map transform to fix z-fighting
 
@@ -107,17 +107,12 @@ void LightAndShadowMap::BeginShadowRender(const dx_ptr<ID3D11DeviceContext>& con
 	cbView.Update(context, m_lightViewMtx);
 	cbProj.Update(context, m_lightProjMtx);
 	// TODO : 3.12 Set up view port of the appropriate size
-	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = 0.0f;
-	viewport.TopLeftY = 0.0f;
-	viewport.Width = TEXTURE_SIZE;
-	viewport.Height = TEXTURE_SIZE;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	context.get()->RSSetViewports(1, &viewport);
+	ViewportDescription viewportDescription 
+		= ViewportDescription(TEXTURE_SIZE, TEXTURE_SIZE);
+
+	context.get()->RSSetViewports(1, &viewportDescription);
 	// TODO : 3.13 Bind no render targets and the shadow map as depth buffer
 	context.get()->OMSetRenderTargets(0, 0, m_shadowDepthBuffer.get());
 	// TODO : 3.14 Clear the depth buffer
 	context.get()->ClearDepthStencilView(m_shadowDepthBuffer.get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-
 }

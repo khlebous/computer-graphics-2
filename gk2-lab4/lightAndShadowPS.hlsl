@@ -47,12 +47,13 @@ float4 main(PSInput i) : SV_TARGET
 	float3 halfVec = normalize(viewVec + lightVec);
 	float3 color = surfaceColor.rgb * ambientColor;
 
-
 	// TODO : 3.06 Determine light color based on light map
 	// TODO : 3.08 Take into account the clipping plane when determining light color
 	// TODO : 3.16 Include shadow map in light color calculation
 	float4 lightColor = defLightColor;
-	if(i.worldPos.y < lightPos.y)
+
+	float depth = shadowMap.Sample(colorSampler, globalPos.xy);
+	if(i.worldPos.y < lightPos.y && depth > globalPos.z)
 		lightColor = max(lightMap.Sample(colorSampler, globalPos.xy), defLightColor);
 
 	color += lightColor.rgb * surfaceColor.xyz * kd * saturate(dot(normal, lightVec)); //diffuse color
