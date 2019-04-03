@@ -50,20 +50,34 @@ XMFLOAT4 LightAndShadowMap::UpdateLightPosition(const dx_ptr<ID3D11DeviceContext
 	XMFLOAT4 lightTarget{ 0.0f, -10.0f, 0.0f, 1.0f };
 	XMFLOAT4 upDir{ 1.0f, 0.0f, 0.0f, 0.0f };
 
-	XMFLOAT4X4 texMtx;
-
-	// TODO : 3.01 Calculate view, inverted view and projection matrix and store them in appropriate class fields
+	// TODO : 3.01 Calculate view, inverted view and projection matrix and store them in
+	// appropriate class fields
+	XMMATRIX viewMtx = XMMatrixLookAtLH(
+		XMVector3TransformCoord(XMLoadFloat4(&lightPos), lightMtx), 
+		XMVector3TransformCoord(XMLoadFloat4(&lightTarget), lightMtx), 
+		XMVector3TransformNormal(XMLoadFloat4(&upDir), lightMtx));
+	XMStoreFloat4x4(&m_lightViewMtx[0], viewMtx);
+	XMMATRIX inverseMtx = XMMatrixInverse(nullptr, viewMtx);
+	XMStoreFloat4x4(&m_lightViewMtx[1], inverseMtx);
+	XMMATRIX projMtx = XMMatrixPerspectiveFovLH(LIGHT_FOV_ANGLE, 1, LIGHT_NEAR, LIGHT_FAR);
+	XMStoreFloat4x4(&m_lightProjMtx, projMtx);
 
 	// TODO : 3.02 Calculate map transform matrix
+	XMFLOAT4X4 texFloat4x4;
+	XMMATRIX textMtx = viewMtx * projMtx * XMMatrixScaling(0.5f, -0.5f, 1.0f)
+		* XMMatrixTranslation(0.5f, 0.5f, 0.0f);
 
 	// TODO : 3.17 Modify map transform to fix z-fighting
 
-	XMStoreFloat4x4(&texMtx, XMMatrixIdentity());
+	XMStoreFloat4x4(&texFloat4x4, textMtx);
 
-	m_cbMapMtx.Update(context, texMtx);
+	m_cbMapMtx.Update(context, texFloat4x4);
 
 	// TODO : 3.03 Return light position in world coordinates
-	return lightPos;
+	XMVECTOR globalLightPos = XMVector3TransformCoord(XMLoadFloat4(&lightPos), lightMtx);
+	XMFLOAT4 globalLightPosFLoat4;
+	XMStoreFloat4(&globalLightPosFLoat4, globalLightPos);
+	return globalLightPosFLoat4;
 }
 
 void LightAndShadowMap::BeginShadowRender(const dx_ptr<ID3D11DeviceContext>& context,
