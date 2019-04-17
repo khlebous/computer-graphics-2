@@ -6,7 +6,7 @@ using namespace DirectX;
 using namespace std;
 using namespace utils;
 
-ShaderDemo::ShaderDemo(HINSTANCE hInst): GK2ShaderDemoBase(hInst)
+ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 {
 	//Shader Variables
 	m_variables.AddSemanticVariable("modelMtx", VariableSemantic::MatM);
@@ -25,9 +25,18 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst): GK2ShaderDemoBase(hInst)
 	m_variables.AddGuiVariable("m", 50.f, 10.f, 200.f);
 
 	//Models
-	const auto sphere = addModelFromString("s 0 0 0 0.5");
+	const auto teapot = addModelFromFile("models/Teapot.3ds");
+	
+	XMFLOAT4X4 modelMtx;
+	float scale = 1.0f / 60.0f;
+	XMStoreFloat4x4(&modelMtx, XMMatrixScaling(scale, scale, scale) *
+		XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.5f, 0.0f));
+	model(teapot).applyTransform(modelMtx);
+
+	m_variables.AddSampler(m_device, "samp");
+	m_variables.AddTexture(m_device, "normTex", L"textures/normal.png");
 
 	//Render Passes
-	const auto passSphere = addPass(L"sphereVS.cso", L"spherePS.cso");
-	addModelToPass(passSphere, sphere);
+	const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso");
+	addModelToPass(passTeapot, teapot);
 }
