@@ -24,6 +24,12 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	m_variables.AddGuiVariable("ka", 0.2f);
 	m_variables.AddGuiVariable("m", 50.f, 10.f, 200.f);
 
+	m_variables.AddGuiVariable("thalf", 3.f, 1.f, 5.f);
+	m_variables.AddGuiVariable("xmax", .5f, .1f, 1.f);
+	m_variables.AddGuiVariable("vmax", 4.f, .5f, 10.f);
+	m_variables.AddGuiVariable("tmax", 25.0f, 1.0f, 40.0f);
+	m_variables.AddSemanticVariable("time", VariableSemantic::FloatT);
+
 	//Teapot
 	const auto teapot = addModelFromFile("models/Teapot.3ds");
 	
@@ -41,7 +47,10 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	m_variables.AddGuiVariable("h0", h0, 0, 3);
 	m_variables.AddGuiVariable("l", 15.f, 5, 25);
 	m_variables.AddGuiVariable("r", 0.5f, 0.01f, 1);
-	m_variables.AddGuiVariable("rsmall", 0.1f, 0.01f, 0.5f);	const auto plane = addModelFromFile("models/Plane.obj");	XMStoreFloat4x4(&modelMtx, XMMatrixTranslation(0, -h0, 0));
+	m_variables.AddGuiVariable("rsmall", 0.1f, 0.01f, 0.5f);
+
+	const auto plane = addModelFromFile("models/Plane.obj");
+	XMStoreFloat4x4(&modelMtx, XMMatrixTranslation(0, -h0, 0));
 	model(plane).applyTransform(modelMtx);
 
 	//Render Passes

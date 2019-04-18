@@ -1,6 +1,7 @@
 matrix modelMtx, modelInvTMtx, viewProjMtx;
 float4 camPos;
 float h0;
+float time, xmax, vmax, thalf, tmax;
 
 struct VSInput
 {
@@ -18,10 +19,17 @@ struct VSOutput
 	float2 tex : TEXCOORD0;
 };
 
+float spring_height(float time)
+{
+	return xmax * exp(log(0.5) * time / thalf) * sin(time * vmax / xmax);
+}
+
 VSOutput main(VSInput i)
 {
 	float4 worldPos = mul(modelMtx, float4(i.pos, 1.0f));
-	worldPos.y += h0;
+	float integer_part;
+	float t = modf(time / tmax, integer_part) * tmax;
+	worldPos.y += h0 + spring_height(t);
 
 	VSOutput o;
 	o.tex = i.tex / 4;
