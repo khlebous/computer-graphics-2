@@ -42,8 +42,7 @@ namespace mini
 				float nearPlane, float farPlane, DirectX::XMFLOAT3 position);
 
 			void Begin(const dx_ptr<ID3D11DeviceContext>& context) const override;
-
-
+			
 			void SetWorldMatrixBuffer(const ConstantBuffer<DirectX::XMFLOAT4X4>& buffer)
 			{
 				SetVSConstantBuffer(WorldMtxSlot, buffer);
