@@ -16,7 +16,8 @@ RoomDemo::RoomDemo(HINSTANCE appInstance)
 	: Gk2ExampleBase(appInstance, 1280, 720, L"Pokój"),
 	//Constant Buffers
 	m_cbWorldMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
-	m_cbProjMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()), m_cbTex1Mtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
+	m_cbProjMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()), 
+	m_cbTex1Mtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
 	m_cbTex2Mtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),
 	m_cbViewMtx(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()),
 	m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>()),
