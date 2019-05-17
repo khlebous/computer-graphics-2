@@ -80,4 +80,10 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	const auto passEnv = addPass(L"envVS.cso", L"envPS.cso");
 	addModelToPass(passEnv, envModel);
 	addRasterizerState(passEnv,	RasterizerDescription(true));
+
+	auto passWater = addPass(L"waterVS.cso", L"waterPS.cso");
+	addModelToPass(passWater, quad);
+	RasterizerDescription rs;
+	rs.CullMode = D3D11_CULL_NONE;
+	addRasterizerState(passWater, rs);
 }
