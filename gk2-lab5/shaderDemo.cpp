@@ -30,6 +30,12 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	m_variables.AddGuiVariable("tmax", 25.0f, 1.0f, 40.0f);
 	m_variables.AddSemanticVariable("time", VariableSemantic::FloatT);
 
+	m_variables.AddTexture(m_device, "envMap", L"textures/cubeMap.dds");
+	m_variables.AddTexture(m_device, "perlin", L"textures/NoiseVolume.dds");
+
+	m_variables.AddSemanticVariable("mvpMtx", VariableSemantic::MatMVP);
+	m_variables.AddGuiVariable("waterLevel", -0.05f, -1, 1, 0.001f);
+
 	//Teapot
 	const auto teapot = addModelFromFile("models/Teapot.3ds");
 	
@@ -53,9 +59,25 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	XMStoreFloat4x4(&modelMtx, XMMatrixTranslation(0, -h0, 0));
 	model(plane).applyTransform(modelMtx);
 
+	// Water
+	auto quad = addModelFromString(
+		"pp 4\n1 0 1 0 1 0\n1 0 -1 0 1 0\n"
+		"-1 0 -1 0 1 0\n-1 0 1 0 1 0\n");
+	auto envModel = addModelFromString("hex 0 0 0 1.73205");
+
+	XMStoreFloat4x4(&modelMtx, XMMatrixScaling(20, 20, 20));
+	model(quad).applyTransform(modelMtx);
+	model(envModel).applyTransform(modelMtx);
+
+
 	//Render Passes
 	const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso");
 	addModelToPass(passTeapot, teapot);
+	
 	const auto passSpring = addPass(L"springVS.cso", L"springPS.cso");
 	addModelToPass(passSpring, plane);
+
+	const auto passEnv = addPass(L"envVS.cso", L"envPS.cso");
+	addModelToPass(passEnv, envModel);
+	addRasterizerState(passEnv,	RasterizerDescription(true));
 }
