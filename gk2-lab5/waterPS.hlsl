@@ -1,6 +1,8 @@
 textureCUBE envMap;
+texture3D perlin;
 float4 camPos;
 sampler samp;
+float time;
 
 const float f0 = 0.17f;
 
@@ -26,8 +28,13 @@ float Fresnel(float cos)
 
 float4 main(PSInput i) : SV_TARGET
 {
+	float3 tex = float3(i.localPos.xz * 10.0f, time);
+	float ex = perlin.Sample(samp, tex);
+	float ez = perlin.Sample(samp, tex + 0.5);
+	ex = 2 * ex - 1;
+	ez = 2 * ez - 1;
+	float3 norm = normalize(float3(ex, 20.0f, ez));
 	float3 viewVec = normalize(camPos.xyz - i.worldPos);
-	float3 norm = float3(0.0f, 1.0f, 0.0f);
 	float n = 0.75;
 
 	if (dot(viewVec, norm) < 0) 
@@ -40,9 +47,10 @@ float4 main(PSInput i) : SV_TARGET
 	float3 reflectColor = envMap.Sample(samp, v_reflect);
 
 	float3 v_refract = IntersectRay(i.localPos, refract(-viewVec, norm, 0.75f));
-	float3 refractColor = envMap.Sample(samp, v_refract);
+	float3 refractColor = any(v_refract) ? envMap.Sample(samp, v_refract): float3(0, 0, 0);
 
-	float fresnel_coeff = Fresnel(dot(viewVec, norm));
+	float cos = max(dot(viewVec, norm), 0);
+	float fresnel_coeff = Fresnel(cos);
 	float3 color = fresnel_coeff * reflectColor + (1 - fresnel_coeff) * refractColor;
 
 	return float4(pow(color, 0.4545f), 1.0f);
