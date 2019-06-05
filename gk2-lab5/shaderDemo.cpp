@@ -14,15 +14,13 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	m_variables.AddSemanticVariable("viewProjMtx", VariableSemantic::MatVP);
 	m_variables.AddSemanticVariable("camPos", VariableSemantic::Vec4CamPos);
 
-	XMFLOAT4 lightPos[2] = { { -1,0,-1.7f,1 },{ 0,1.7f,0,1 } };
-	XMFLOAT3 lightColor[2] = { { 1, 0.8f, 0.9f },{ 0.1f, 0, 1 } };
+	XMFLOAT4 lightPos[2] = { { -1.f, 0.0f, -3.5f, 1.f },{ 0.f, 3.5f, 0.0f, 1.f } };
+	XMFLOAT3 lightColor[2] = { { 12.f, 9.f, 10.f },{ 1.f, 0.f, 30.f } };
 	m_variables.AddGuiVariable("lightPos", lightPos, -10, 10);
-	m_variables.AddGuiColorsVariable("lightColor", lightColor);
-	m_variables.AddGuiColorVariable("surfaceColor", XMFLOAT3{ 0.5f, 1.0f, 0.8f });
-	m_variables.AddGuiVariable("ks", 0.8f);
-	m_variables.AddGuiVariable("kd", 0.5f);
-	m_variables.AddGuiVariable("ka", 0.2f);
-	m_variables.AddGuiVariable("m", 50.f, 10.f, 200.f);
+	m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
+	m_variables.AddGuiColorVariable("albedo", XMFLOAT3{ 1.f, 1.f, 1.f });
+	m_variables.AddGuiVariable("metallic", 1.0f);
+	m_variables.AddGuiVariable("roughness", .3f, .1f);
 
 	m_variables.AddGuiVariable("thalf", 3.f, 1.f, 5.f);
 	m_variables.AddGuiVariable("xmax", .5f, .1f, 1.f);
@@ -38,7 +36,7 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 
 	//Teapot
 	const auto teapot = addModelFromFile("models/Teapot.3ds");
-	
+
 	XMFLOAT4X4 modelMtx;
 	float scale = 1.0f / 60.0f;
 	auto h0 = 1.5f;
@@ -73,13 +71,13 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	//Render Passes
 	const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso");
 	addModelToPass(passTeapot, teapot);
-	
+
 	const auto passSpring = addPass(L"springVS.cso", L"springPS.cso");
 	addModelToPass(passSpring, plane);
 
 	const auto passEnv = addPass(L"envVS.cso", L"envPS.cso");
 	addModelToPass(passEnv, envModel);
-	addRasterizerState(passEnv,	RasterizerDescription(true));
+	addRasterizerState(passEnv, RasterizerDescription(true));
 
 	auto passWater = addPass(L"waterVS.cso", L"waterPS.cso");
 	addModelToPass(passWater, quad);
