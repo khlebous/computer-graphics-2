@@ -18,9 +18,6 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 	XMFLOAT3 lightColor[2] = { { 12.f, 9.f, 10.f },{ 1.f, 0.f, 30.f } };
 	m_variables.AddGuiVariable("lightPos", lightPos, -10, 10);
 	m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
-	m_variables.AddGuiColorVariable("albedo", XMFLOAT3{ 1.f, 1.f, 1.f });
-	m_variables.AddGuiVariable("metallic", 1.0f);
-	m_variables.AddGuiVariable("roughness", .3f, .1f);
 
 	m_variables.AddGuiVariable("thalf", 3.f, 1.f, 5.f);
 	m_variables.AddGuiVariable("xmax", .5f, .1f, 1.f);
@@ -46,6 +43,9 @@ ShaderDemo::ShaderDemo(HINSTANCE hInst) : GK2ShaderDemoBase(hInst)
 
 	m_variables.AddSampler(m_device, "samp");
 	m_variables.AddTexture(m_device, "normTex", L"textures/normal.png");
+	m_variables.AddTexture(m_device, "albedoTex", L"textures/albedo.png");
+	m_variables.AddTexture(m_device, "roughnessTex", L"textures/roughness.png");
+	m_variables.AddTexture(m_device, "metallicTex", L"textures/metallic.png");
 
 	// Spring
 	m_variables.AddGuiVariable("h0", h0, 0, 3);

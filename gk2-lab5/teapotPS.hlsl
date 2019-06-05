@@ -9,9 +9,9 @@ float4 lightPos[NLIGHTS];
 float3 lightColor[NLIGHTS];
 float4 camPos;
 
-float3 albedo;
-float metallic;
-float roughness;
+texture2D albedoTex;
+texture2D roughnessTex;
+texture2D metallicTex;
 
 float normalDistributionGGX(float3 N, float3 H, float roughness)
 {
@@ -73,12 +73,15 @@ float4 main(PSInput i) : SV_TARGET
 	float3 tn = normTex.Sample(samp, i.tex);
 	tn = tn * 2 - 1;
 	tn.y = -tn.y;
-
 	float3 norm = normalMapping(NN, T, tn);
+
+	float3 albedo = albedoTex.Sample(samp, i.tex);
+	float3 A = pow(albedo, 2.2);
+	float roughness = roughnessTex.Sample(samp, i.tex);
+	float metallic = metallicTex.Sample(samp, i.tex);
 
 	float3 N = normalize(norm);
 	float3 V = normalize(i.view);
-	float3 A = pow(albedo, 2.2);
 	float3 F0 = float3(0.04f, 0.04f, 0.04f) * (1 - metallic) + A * metallic;
 
 	float3 Lo = float3(0.0, 0.0, 0.0);
