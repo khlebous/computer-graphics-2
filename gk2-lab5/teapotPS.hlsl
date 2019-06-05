@@ -13,7 +13,7 @@ float3 albedo;
 float metallic;
 float roughness;
 
-float normalDistributionGGX(float3 N, float3 H)
+float normalDistributionGGX(float3 N, float3 H, float roughness)
 {
 	float r2 = roughness * roughness;
 	float NdotH = max(dot(N, H), 0.0);
@@ -25,7 +25,7 @@ float normalDistributionGGX(float3 N, float3 H)
 	return r2 / denom;
 }
 
-float geometrySchlickGGX(float a)
+float geometrySchlickGGX(float a, float roughness)
 {
 	float q = (roughness + 1) * (roughness + 1) / 8.0;
 	return a / (a * (1 - q) + q);
@@ -39,6 +39,20 @@ float3 normalMapping(float3 N, float3 T, float3 tn)
 
 	return mul(tn, m);
 }
+
+float geometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+	float ggx1 = geometrySchlickGGX(max(dot(N, V), 0.0), roughness);
+	float ggx2 = geometrySchlickGGX(max(dot(N, L), 0.0), roughness);
+
+	return ggx1 * ggx2;
+}
+
+float3 fresnel(float cosTheta, float3 F0)
+{
+	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
 struct PSInput
 {
 	float4 pos : SV_POSITION;
@@ -69,23 +83,34 @@ float4 main(PSInput i) : SV_TARGET
 	float3 N = normalize(norm);
 	float3 V = normalize(i.view);
 
-	float3 Li = float3(0.0, 0.0, 0.0);
+	float3 Lo = float3(0.0, 0.0, 0.0);
 	for (int idx = 0; idx < NLIGHTS; idx++)
 	{
-		int idx = 0;
-
 		float3 L = normalize(lightPos[idx] - i.worldPos);
 		float3 H = normalize(V + L);
-
 		float distance = length(lightPos[idx] - i.worldPos);
 		float attenuation = 1.0 / (distance * distance);
-		float Il = lightColor[idx] * attenuation;
+		float3 radiance = lightColor[idx] * attenuation;
 
-		float3 radiance = Il * max(dot(N, L), 0.0);
+		float NDF = normalDistributionGGX(N, H, roughness);
+		float G = geometrySmith(N,V,L, roughness);
+		float3 F = fresnel(max(dot(H, V), 0.0), F0);
+		
+		float3 ks = F;
+		float3 kd = (1.0 - ks) * (1.0 - metallic);
 
-		//float NDF = normalDistributionGGX(N, H);
-		//return float4(NDF, NDF, NDF, 1.0f);
+		float3 numerator = F * G * NDF;
+		float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+		float3 specular = numerator / max(denominator, 0.001);
 
-		float GGX = geometrySchlickGGX(max(dot(N, L), 0.0f));
-		return float4(GGX, GGX, GGX, 1.0f);	}
+		float3 Li = radiance * max(dot(N, L), 0.0);
+		Lo += (kd * albedo / PI + specular) * Li;	}
+
+	float3 ambient = 0.03 * albedo;
+	float3 color = ambient + Lo;
+
+	color = color / (color + 1.0);
+	color = pow(color, 1.0 / 2.2);
+
+	return float4(color, 1.0);
 }
