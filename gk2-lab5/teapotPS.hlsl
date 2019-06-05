@@ -64,10 +64,6 @@ struct PSInput
 
 float4 main(PSInput i) : SV_TARGET
 {
-	float3 A = pow(albedo, 2.2);
-
-	float3 F0 = float3(0.04f, 0.04f, 0.04f) * (1 - metallic) + A * metallic;
-
 	float3 NN = normalize(i.norm);
 	float3 dPdx = ddx(i.worldPos);
 	float3 dPdy = ddy(i.worldPos);
@@ -82,6 +78,8 @@ float4 main(PSInput i) : SV_TARGET
 
 	float3 N = normalize(norm);
 	float3 V = normalize(i.view);
+	float3 A = pow(albedo, 2.2);
+	float3 F0 = float3(0.04f, 0.04f, 0.04f) * (1 - metallic) + A * metallic;
 
 	float3 Lo = float3(0.0, 0.0, 0.0);
 	for (int idx = 0; idx < NLIGHTS; idx++)
