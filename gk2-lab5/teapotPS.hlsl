@@ -25,6 +25,12 @@ float normalDistributionGGX(float3 N, float3 H)
 	return r2 / denom;
 }
 
+float geometrySchlickGGX(float a)
+{
+	float q = (roughness + 1) * (roughness + 1) / 8.0;
+	return a / (a * (1 - q) + q);
+}
+
 float3 normalMapping(float3 N, float3 T, float3 tn)
 {
 	float3 B = cross(N, T) / length(cross(N, T));
@@ -77,7 +83,9 @@ float4 main(PSInput i) : SV_TARGET
 
 		float3 radiance = Il * max(dot(N, L), 0.0);
 
-		float NDF = normalDistributionGGX(N, H);
-		return float4(NDF, NDF, NDF, 1.0f);
-	}
+		//float NDF = normalDistributionGGX(N, H);
+		//return float4(NDF, NDF, NDF, 1.0f);
+
+		float GGX = geometrySchlickGGX(max(dot(N, L), 0.0f));
+		return float4(GGX, GGX, GGX, 1.0f);	}
 }
